@@ -33,11 +33,11 @@ export function Sidebar({ collapsed }: SidebarProps) {
   return (
     <aside
       className={[
-        "fixed left-0 top-20 bottom-0 z-30 border-r border-[#dfe5ee] bg-[#ebeff4] transition-all duration-300",
-        collapsed ? "w-20" : "w-72",
+        "fixed left-0 top-16 bottom-0 z-30 border-r border-[#dfe5ee] bg-[#ebeff4] transition-all duration-300 md:top-20",
+        collapsed ? "-translate-x-full md:translate-x-0 md:w-20" : "translate-x-0 w-[80%] max-w-[18rem] md:w-72",
       ].join(" ")}
     >
-      <div className="flex h-full flex-col px-3 py-3">
+      <div className="flex h-full flex-col px-2 py-3 md:px-3">
         <nav className="flex-1 overflow-y-auto pt-1">
           <ul className="space-y-2">
             {menu.map((item) => {

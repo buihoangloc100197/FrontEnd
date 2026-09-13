@@ -90,8 +90,8 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-40 h-20 border-b border-[#dfe3ea] bg-[#f6f7fb] backdrop-blur-xl">
-      <div className="flex h-full items-center justify-between px-5 md:px-6">
+    <header className="fixed left-0 right-0 top-0 z-40 h-16 border-b border-[#dfe3ea] bg-[#f6f7fb] backdrop-blur-xl md:h-20">
+      <div className="flex h-full items-center justify-between px-3 sm:px-4 md:px-6">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -106,11 +106,11 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#3d5efb] to-[#6d5efc] text-sm font-bold text-white shadow-[0_8px_18px_rgba(90,98,255,0.35)]">
               Q
             </div>
-            <h1 className="text-[15px] font-semibold text-[#202940]">{title}</h1>
+            <h1 className="text-sm font-semibold text-[#202940] md:text-[15px]">{title}</h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <div className="relative" ref={menuRef}>
             <button
               type="button"
@@ -134,7 +134,7 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
                 )}
               </div>
 
-              <span className="hidden text-sm font-medium md:block">{displayName}</span>
+              <span className="hidden text-sm font-medium sm:block">{displayName}</span>
               <span className="text-base text-[#75809a]">▾</span>
             </button>
 
