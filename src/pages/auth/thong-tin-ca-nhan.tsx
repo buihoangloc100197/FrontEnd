@@ -149,7 +149,10 @@ export default function PersonalInfoPage() {
       window.dispatchEvent(new CustomEvent("session:user-updated", { detail: updatedUser }));
 
       setMessage(response.data.message);
-      setTimeout(() => router.push("/"), 800);
+      setForm((current) => ({
+        ...current,
+        avatar_url: form.avatar_url || current.avatar_url,
+      }));
     } catch (err: any) {
       setMessage(err?.response?.data?.message ?? "Cập nhật thất bại");
     } finally {
