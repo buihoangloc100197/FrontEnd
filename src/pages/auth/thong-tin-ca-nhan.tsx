@@ -173,6 +173,8 @@ export default function PersonalInfoPage() {
       }));
       setAvatarPreviewUrl(normalizedAvatarUrl || form.avatar_url || null);
       setMessage(response.data.message);
+
+      router.push("/");
     } catch (err: any) {
       setMessage(err?.response?.data?.message ?? "Cập nhật thất bại");
     } finally {
