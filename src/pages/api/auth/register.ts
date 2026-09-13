@@ -12,11 +12,19 @@ export default function handler(
 
   const username = String(req.body?.username ?? "").trim();
   const password = String(req.body?.password ?? "");
-  const confirmPassword = String(req.body?.confirmPassword ?? "");
+  const confirmPassword = String(req.body?.confirmPassword ?? password);
+  const fullName = String(req.body?.full_name ?? "").trim() || null;
+  const email = String(req.body?.email ?? "").trim() || null;
 
-  if (!username || !password || !confirmPassword) {
+  if (!username || !password) {
     return res.status(400).json({
-      message: "Tên đăng nhập, mật khẩu và xác nhận mật khẩu là bắt buộc",
+      message: "Tên đăng nhập và mật khẩu là bắt buộc",
+    });
+  }
+
+  if (!confirmPassword) {
+    return res.status(400).json({
+      message: "Vui lòng xác nhận mật khẩu",
     });
   }
 
@@ -38,28 +46,38 @@ export default function handler(
     });
   }
 
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({
+      message: "Email không hợp lệ",
+    });
+  }
+
   const existingUser = db
-    .prepare("SELECT id FROM users WHERE username = ?")
-    .get(username) as { id: number } | undefined;
+    .prepare("SELECT id FROM users WHERE username = ? OR email = ?")
+    .get(username, email ?? "") as { id: number } | undefined;
 
   if (existingUser) {
     return res.status(409).json({
-      message: "Tên đăng nhập đã tồn tại",
+      message: "Tên đăng nhập hoặc email đã tồn tại",
     });
   }
 
   const hash = bcrypt.hashSync(password, 10);
+  const isProfileComplete = Boolean(fullName && email);
+
   const result = db
     .prepare(
-      "INSERT INTO users (username, password_hash, profile_complete, created_at, updated_at) VALUES (?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+      "INSERT INTO users (username, password_hash, full_name, email, role, profile_complete, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
     )
-    .run(username, hash);
+    .run(username, hash, fullName, email, "user", isProfileComplete ? 1 : 0);
 
   return res.status(201).json({
     message: "Đăng ký thành công",
     user: {
       id: Number(result.lastInsertRowid),
       username,
+      full_name: fullName,
+      email,
     },
   });
 }

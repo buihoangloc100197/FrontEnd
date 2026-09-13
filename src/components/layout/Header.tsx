@@ -77,23 +77,23 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-40 h-20 border-b border-[#dfe8f5] bg-[#111827]/95 backdrop-blur-xl">
+    <header className="fixed left-0 right-0 top-0 z-40 h-20 border-b border-[#dfe3ea] bg-[#f6f7fb] backdrop-blur-xl">
       <div className="flex h-full items-center justify-between px-5 md:px-6">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#32415f] bg-[#1d2a3d] text-lg text-[#f5f1e8] transition hover:border-[#2e6bff] hover:text-[#dfeaff]"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#c6d0dc] bg-white text-lg text-[#2d3748] shadow-sm transition hover:border-[#7c9cff]"
             aria-label={collapsed ? "Mở menu" : "Ẩn menu"}
           >
-            {collapsed ? "☰" : "✕"}
+            {collapsed ? "☰" : "☰"}
           </button>
 
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#dfeaff]">
-              Dashboard
-            </p>
-            <h1 className="text-lg font-bold text-[#f5f1e8]">{title}</h1>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#3d5efb] to-[#6d5efc] text-sm font-bold text-white shadow-[0_8px_18px_rgba(90,98,255,0.35)]">
+              Q
+            </div>
+            <h1 className="text-[15px] font-semibold text-[#202940]">{title}</h1>
           </div>
         </div>
 
@@ -102,9 +102,14 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
             <button
               type="button"
               onClick={() => setIsMenuOpen((current) => !current)}
-              className="flex items-center gap-3 rounded-full border border-[#32415f] bg-[#1d2a3d] px-2 py-2 pr-3 text-left text-[#f5f1e8] transition hover:border-[#2e6bff]"
+              className="flex items-center gap-3 rounded-full border border-[#dfe3ea] bg-white px-2 py-2 pr-3 text-left text-[#202940] shadow-sm transition hover:border-[#7c9cff]"
             >
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#dfeaff] via-[#8fb9ff] to-[#2e6bff] font-bold text-[#111827] shadow-[0_8px_18px_rgba(46,107,255,0.35)]">
+              <span className="flex h-7 items-center gap-2 text-[11px] font-medium text-[#2f3746]">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#22c55e] shadow-[0_0_0_2px_rgba(34,197,94,0.15)]" />
+                System online
+              </span>
+
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#dfeaff] via-[#b7c9ff] to-[#6978ff] font-bold text-[#111827]">
                 {user?.avatar_url ? (
                   <img
                     src={user.avatar_url}
@@ -116,18 +121,12 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
                 )}
               </div>
 
-              <div className="hidden text-left md:block">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#dfeaff]/70">
-                  Xin chào
-                </p>
-                <p className="text-sm font-semibold text-[#f5f1e8]">{displayName}</p>
-              </div>
-
-              <span className="text-sm text-[#dfeaff]">▾</span>
+              <span className="hidden text-sm font-medium md:block">{displayName}</span>
+              <span className="text-base text-[#75809a]">▾</span>
             </button>
 
             {isMenuOpen && (
-              <div className="absolute right-0 top-[calc(100%+12px)] w-64 overflow-hidden rounded-2xl border border-[#dfe8f5] bg-[#ffffff] shadow-[0_18px_40px_rgba(17,24,39,0.18)]">
+              <div className="absolute right-0 top-[calc(100%+12px)] w-64 overflow-hidden rounded-2xl border border-[#dfe3ea] bg-white shadow-[0_18px_40px_rgba(17,24,39,0.12)]">
                 <div className="border-b border-[#edf3ff] px-4 py-3">
                   <p className="text-xs uppercase tracking-[0.2em] text-[#4a5568]">Tài khoản</p>
                   <p className="mt-1 font-semibold text-[#111827]">{displayName}</p>

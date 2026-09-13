@@ -18,7 +18,7 @@ export default function handler(
     if (req.method === "GET") {
       const user = db
         .prepare(
-          "SELECT id, username, full_name, mssv, class_name, gender, phone, email, avatar_url, profile_complete FROM users WHERE id = ?",
+          "SELECT id, username, full_name, mssv, class_name, gender, phone, email, avatar_url, role, profile_complete FROM users WHERE id = ?",
         )
         .get(payload.id) as
         | {
@@ -31,6 +31,7 @@ export default function handler(
             phone: string | null;
             email: string | null;
             avatar_url: string | null;
+            role: string | null;
             profile_complete: number;
           }
         | undefined;
@@ -50,6 +51,7 @@ export default function handler(
           phone: user.phone,
           email: user.email,
           avatar_url: user.avatar_url,
+          role: user.role === "admin" ? "admin" : "user",
           profileComplete: Boolean(user.profile_complete),
         },
       });

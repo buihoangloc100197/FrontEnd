@@ -13,6 +13,7 @@ type UserRow = {
   gender: string | null;
   phone: string | null;
   email: string | null;
+  role: string | null;
   profile_complete: number;
 };
 
@@ -52,10 +53,13 @@ export default function handler(
       user.email,
   );
 
+  const role = user.role === "admin" ? "admin" : "user";
+
   const token = createToken({
     id: user.id,
     username: user.username,
     profileComplete,
+    role,
   });
 
   return res.status(200).json({
@@ -71,6 +75,7 @@ export default function handler(
       gender: user.gender,
       phone: user.phone,
       email: user.email,
+      role,
       profileComplete,
     },
   });
