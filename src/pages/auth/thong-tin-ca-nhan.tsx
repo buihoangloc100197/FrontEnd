@@ -20,6 +20,7 @@ export default function PersonalInfoPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [form, setForm] = useState<ProfileForm>({
     full_name: "",
@@ -87,6 +88,9 @@ export default function PersonalInfoPage() {
       return;
     }
 
+    const localPreviewUrl = URL.createObjectURL(file);
+    setAvatarPreviewUrl(localPreviewUrl);
+
     if (!supabase) {
       setMessage("Supabase chưa được cấu hình, vui lòng kiểm tra biến môi trường");
       event.target.value = "";
@@ -109,7 +113,9 @@ export default function PersonalInfoPage() {
       }
 
       const publicUrl = `${getSupabaseUrl()}/storage/v1/object/public/avatars/${data?.path ?? fileName}`;
-      setForm((current) => ({ ...current, avatar_url: publicUrl }));
+      const cacheBustedUrl = `${publicUrl}${publicUrl.includes("?") ? "&" : "?"}t=${Date.now()}`;
+      setAvatarPreviewUrl(cacheBustedUrl);
+      setForm((current) => ({ ...current, avatar_url: cacheBustedUrl }));
       setMessage("Ảnh đại diện đã được tải lên Supabase thành công");
     } catch (error: any) {
       console.error("Upload avatar failed:", error);
@@ -138,21 +144,28 @@ export default function PersonalInfoPage() {
         },
       );
 
+      const normalizedAvatarUrl = form.avatar_url
+        ? form.avatar_url.includes("?")
+          ? `${form.avatar_url}&v=${Date.now()}`
+          : `${form.avatar_url}?v=${Date.now()}`
+        : form.avatar_url;
+
       const storedUser = getStoredSessionUser();
       const updatedUser = {
         ...storedUser,
         ...form,
-        avatar_url: form.avatar_url || storedUser?.avatar_url || null,
+        avatar_url: normalizedAvatarUrl || storedUser?.avatar_url || null,
       };
 
       saveStoredSessionUser(updatedUser);
       window.dispatchEvent(new CustomEvent("session:user-updated", { detail: updatedUser }));
 
-      setMessage(response.data.message);
       setForm((current) => ({
         ...current,
-        avatar_url: form.avatar_url || current.avatar_url,
+        avatar_url: normalizedAvatarUrl || current.avatar_url,
       }));
+      setAvatarPreviewUrl(normalizedAvatarUrl || form.avatar_url || null);
+      setMessage(response.data.message);
     } catch (err: any) {
       setMessage(err?.response?.data?.message ?? "Cập nhật thất bại");
     } finally {
@@ -282,24 +295,26 @@ export default function PersonalInfoPage() {
                 type="url"
                 name="avatar_url"
                 value={form.avatar_url}
-                onChange={handleChange}
+                onChange={(event) => {
+                  const nextUrl = event.target.value;
+                  setForm((current) => ({ ...current, avatar_url: nextUrl }));
+                  setAvatarPreviewUrl(nextUrl || null);
+                }}
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
                 placeholder="Nhập link ảnh nếu muốn dùng link trực tiếp"
               />
 
-              {form.avatar_url ? (
-                <div className="mt-3 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 p-3">
-                  <img
-                    key={form.avatar_url}
-                    src={form.avatar_url}
-                    alt="Avatar preview"
-                    className="h-24 w-24 rounded-full object-cover ring-2 ring-cyan-500/40"
-                    onError={(event) => {
-                      event.currentTarget.style.display = "none";
-                    }}
-                  />
-                </div>
-              ) : null}
+              <div className="mt-3 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 p-3">
+                <img
+                  key={avatarPreviewUrl || form.avatar_url || "placeholder-avatar"}
+                  src={avatarPreviewUrl || form.avatar_url || ""}
+                  alt="Avatar preview"
+                  className="h-24 w-24 rounded-full object-cover ring-2 ring-cyan-500/40"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
+              </div>
 
               <input
                 ref={fileInputRef}
