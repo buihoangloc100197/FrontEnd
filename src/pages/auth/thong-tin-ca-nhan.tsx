@@ -266,6 +266,15 @@ export default function PersonalInfoPage() {
               </div>
 
               <input
+                type="url"
+                name="avatar_url"
+                value={form.avatar_url}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                placeholder="Nhập link ảnh nếu muốn dùng link trực tiếp"
+              />
+
+              <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
@@ -274,7 +283,7 @@ export default function PersonalInfoPage() {
               />
 
               <p className="mt-2 text-xs text-slate-400">
-                Ảnh sẽ được tải lên Supabase Storage và lưu link vào hồ sơ người dùng.
+                Nếu dùng link, hệ thống sẽ lưu link đó vào database. Nếu chọn ảnh, hệ thống sẽ upload lên Supabase Storage rồi lưu link public vào database.
               </p>
             </div>
 
