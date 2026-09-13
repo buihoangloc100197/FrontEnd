@@ -83,7 +83,13 @@ export default function LoginPage() {
           <div className="mx-auto max-w-[430px] pt-6 md:pt-10">
             <h2 className="text-[58px] font-light leading-none tracking-[-0.08em] text-[#5d6776]">Sign In</h2>
 
-            <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+            <div className="mt-6 rounded-2xl border border-[#dfe8f5] bg-[#edf3ff] px-4 py-3 text-sm text-[#1f3b7a] shadow-[0_8px_18px_rgba(46,107,255,0.06)]">
+              <p className="font-semibold">Demo account:</p>
+              <p>• Admin: <span className="font-semibold">admin</span> / <span className="font-semibold">123</span></p>
+              <p>• User: <span className="font-semibold">loc97</span> / <span className="font-semibold">123</span></p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="mt-6 space-y-5">
               <div className="relative">
                 <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-xl text-[#4a5568]">👤</span>
                 <input
