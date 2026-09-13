@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { getStoredSessionUser, normalizeUserRole } from "@/lib/session";
 
 type SidebarItem = {
   label: string;
@@ -20,6 +22,13 @@ const menu: SidebarItem[] = [
 
 export function Sidebar({ collapsed }: SidebarProps) {
   const router = useRouter();
+  const [role, setRole] = useState<"admin" | "user" | null>(null);
+
+  useEffect(() => {
+    const user = getStoredSessionUser();
+    const nextRole = user ? normalizeUserRole(user.role, user.username) : null;
+    setRole(nextRole);
+  }, [router.pathname]);
 
   return (
     <aside
@@ -33,6 +42,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
           <ul className="space-y-2">
             {menu.map((item) => {
               const isActive = router.pathname === item.href;
+              const isProfileItem = item.label === "Hồ sơ";
 
               return (
                 <li key={item.label}>
@@ -51,6 +61,12 @@ export function Sidebar({ collapsed }: SidebarProps) {
                       {!collapsed && <span>{item.label}</span>}
                     </button>
                   </Link>
+
+                  {!collapsed && isProfileItem && role ? (
+                    <div className="mt-2 rounded-[18px] border border-[#e9d9a4] bg-[#f7eec8] px-3 py-2 text-center text-[14px] font-medium text-[#4a3d13] shadow-[inset_0_0_0_1px_rgba(197,152,45,0.15)]">
+                      Vai trò: {role === "admin" ? "Quản trị viên" : "Người dùng"}
+                    </div>
+                  ) : null}
                 </li>
               );
             })}
