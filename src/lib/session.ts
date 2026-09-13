@@ -17,14 +17,49 @@ export function normalizeUserRole(role?: string | null, username?: string): "adm
   return "user";
 }
 
+export function getStoredSessionToken(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const token = window.sessionStorage.getItem("auth_token");
+  if (token) {
+    return token;
+  }
+
+  if (window.localStorage.getItem("auth_token")) {
+    window.localStorage.removeItem("auth_token");
+  }
+
+  return null;
+}
+
+export function saveStoredSessionToken(token: string | null) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (!token) {
+    window.sessionStorage.removeItem("auth_token");
+    window.localStorage.removeItem("auth_token");
+    return;
+  }
+
+  window.sessionStorage.setItem("auth_token", token);
+  window.localStorage.removeItem("auth_token");
+}
+
 export function getStoredSessionUser(): SessionUser | null {
   if (typeof window === "undefined") {
     return null;
   }
 
   try {
-    const raw = window.localStorage.getItem("auth_user");
+    const raw = window.sessionStorage.getItem("auth_user");
     if (!raw) {
+      if (window.localStorage.getItem("auth_user")) {
+        window.localStorage.removeItem("auth_user");
+      }
       return null;
     }
 
@@ -49,6 +84,7 @@ export function saveStoredSessionUser(user: SessionUser | null) {
   }
 
   if (!user) {
+    window.sessionStorage.removeItem("auth_user");
     window.localStorage.removeItem("auth_user");
     return;
   }
@@ -58,7 +94,8 @@ export function saveStoredSessionUser(user: SessionUser | null) {
     role: normalizeUserRole(user.role, user.username),
   };
 
-  window.localStorage.setItem("auth_user", JSON.stringify(normalizedUser));
+  window.sessionStorage.setItem("auth_user", JSON.stringify(normalizedUser));
+  window.localStorage.removeItem("auth_user");
 }
 
 export function clearStoredSession() {
@@ -66,6 +103,8 @@ export function clearStoredSession() {
     return;
   }
 
+  window.sessionStorage.removeItem("auth_token");
+  window.sessionStorage.removeItem("auth_user");
   window.localStorage.removeItem("auth_token");
   window.localStorage.removeItem("auth_user");
 }

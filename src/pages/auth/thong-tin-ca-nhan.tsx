@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
+import { getStoredSessionToken } from "@/lib/session";
 
 type ProfileForm = {
   full_name: string;
@@ -28,7 +29,7 @@ export default function PersonalInfoPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
+    const token = getStoredSessionToken();
 
     if (!token) {
       router.push("/auth/login");
@@ -75,7 +76,7 @@ export default function PersonalInfoPage() {
     setSaving(true);
     setMessage("");
 
-    const token = localStorage.getItem("auth_token");
+    const token = getStoredSessionToken();
 
     try {
       const response = await api.put(

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
-import { clearStoredSession, getStoredSessionUser, normalizeUserRole, saveStoredSessionUser } from "@/lib/session";
+import { clearStoredSession, getStoredSessionToken, getStoredSessionUser, normalizeUserRole, saveStoredSessionUser } from "@/lib/session";
 
 type HeaderProps = {
   title: string;
@@ -29,7 +29,7 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
       setUser(persistedUser);
     }
 
-    const token = localStorage.getItem("auth_token");
+    const token = getStoredSessionToken();
     if (!token) {
       setUser(null);
       clearStoredSession();

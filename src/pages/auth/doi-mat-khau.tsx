@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
+import { getStoredSessionToken } from "@/lib/session";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function ChangePasswordPage() {
     setLoading(true);
     setMessage("");
 
-    const token = localStorage.getItem("auth_token");
+    const token = getStoredSessionToken();
 
     if (!token) {
       router.push("/auth/login");

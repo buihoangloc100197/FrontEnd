@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { getStoredSessionToken } from "@/lib/session";
 
 type Computer = {
   id: number;
@@ -60,7 +61,7 @@ export default function Home() {
 
   const loadData = async () => {
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+      const token = getStoredSessionToken();
       const [computerRes, requestRes, meRes] = await Promise.all([
         fetch("/api/computers"),
         fetch("/api/borrow-requests"),
@@ -149,7 +150,7 @@ export default function Home() {
       return;
     }
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    const token = getStoredSessionToken();
     if (!token) {
       window.alert("Bạn cần đăng nhập để đăng ký mượn máy");
       return;
@@ -197,7 +198,7 @@ export default function Home() {
   };
 
   const handleRequestStatus = async (requestId: number, status: "approved" | "rejected" | "returned") => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    const token = getStoredSessionToken();
     if (!token) {
       window.alert("Bạn cần đăng nhập để duyệt yêu cầu");
       return;
@@ -253,7 +254,7 @@ export default function Home() {
       return;
     }
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    const token = getStoredSessionToken();
     if (!token) {
       window.alert("Bạn cần đăng nhập với quyền admin để quản lý máy");
       return;
@@ -298,7 +299,7 @@ export default function Home() {
       return;
     }
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    const token = getStoredSessionToken();
     if (!token) {
       window.alert("Bạn cần đăng nhập với quyền admin để xóa máy");
       return;

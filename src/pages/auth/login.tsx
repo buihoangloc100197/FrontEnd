@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
-import { saveStoredSessionUser } from "@/lib/session";
+import { saveStoredSessionToken, saveStoredSessionUser } from "@/lib/session";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function LoginPage() {
       const token = response.data.token;
       const user = response.data.user ?? null;
 
-      localStorage.setItem("auth_token", token);
+      saveStoredSessionToken(token);
       saveStoredSessionUser(user);
 
       if (response.data.requireProfile) {
