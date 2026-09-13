@@ -1,83 +1,233 @@
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import api from "@/lib/axios";
+
+type ProfileForm = {
+  full_name: string;
+  mssv: string;
+  class_name: string;
+  gender: string;
+  phone: string;
+  email: string;
+  avatar_url: string;
+};
 
 export default function PersonalInfoPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [form, setForm] = useState<ProfileForm>({
+    full_name: "",
+    mssv: "",
+    class_name: "",
+    gender: "",
+    phone: "",
+    email: "",
+    avatar_url: "",
+  });
+
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+      router.push("/auth/login");
+      return;
+    }
+
+    const fetchUser = async () => {
+      try {
+        const response = await api.get("/api/auth/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const user = response.data.user;
+        setForm({
+          full_name: user.full_name ?? "",
+          mssv: user.mssv ?? "",
+          class_name: user.class_name ?? "",
+          gender: user.gender ?? "",
+          phone: user.phone ?? "",
+          email: user.email ?? "",
+          avatar_url: user.avatar_url ?? "",
+        });
+      } catch (error) {
+        router.push("/auth/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [router]);
+
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaving(true);
+    setMessage("");
+
+    const token = localStorage.getItem("auth_token");
+
+    try {
+      const response = await api.put(
+        "/api/auth/profile",
+        form,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      setMessage(response.data.message);
+      setTimeout(() => router.push("/"), 800);
+    } catch (err: any) {
+      setMessage(err?.response?.data?.message ?? "Cập nhật thất bại");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f5f1e8] text-[#111827]">
+        <div className="text-lg text-[#214ed6]">Đang tải thông tin cá nhân...</div>
+      </main>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100">
-      <div className="mx-auto max-w-4xl">
+    <main className="min-h-screen bg-[#f5f1e8] px-6 py-10 text-[#111827]">
+      <div className="mx-auto max-w-3xl">
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="mb-6 rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-400 hover:text-cyan-300"
+          className="mb-6 rounded-full border border-[#dfe8f5] bg-[#edf3ff] px-4 py-2 text-sm font-medium text-[#214ed6] transition hover:border-[#2e6bff] hover:text-[#111827]"
         >
           ← Quay về trang chủ
         </button>
 
-        <section className="overflow-hidden rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950 shadow-2xl shadow-cyan-950/30">
-          <div className="border-b border-white/10 px-6 py-6 md:px-8">
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
-              Thông tin cá nhân
-            </p>
-            <h1 className="text-3xl font-black text-white md:text-5xl">Bùi Hoàng Lộc</h1>
+        <section className="rounded-3xl border border-[#dfe8f5] bg-[#ffffff] p-8 shadow-[0_18px_40px_rgba(46,107,255,0.08)]">
+          <div className="mb-8 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#214ed6]">Profile</p>
+            <h1 className="mt-3 text-3xl font-black text-[#111827]">Cập nhật thông tin cá nhân</h1>
           </div>
 
-          <div className="grid gap-6 p-6 md:grid-cols-2 md:p-8">
-            <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Họ và tên</p>
-              <p className="mt-2 text-xl font-bold text-white">Bùi Hoàng Lộc</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Lớp</p>
-              <p className="mt-2 text-xl font-bold text-white">25CT401</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Chuyên ngành</p>
-              <p className="mt-2 text-xl font-bold text-white">Công Nghệ Thông Tin</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Email cá nhân</p>
-              <p className="mt-2 break-all text-xl font-bold text-white">buihoangloc100197@gmail.com</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Số điện thoại</p>
-              <p className="mt-2 text-xl font-bold text-white">0382619269</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Tình trạng</p>
-              <p className="mt-2 text-xl font-bold text-emerald-300">Sẵn sàng làm việc</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-8 rounded-3xl border border-white/10 bg-slate-900/80 p-6 md:p-8">
-          <h2 className="mb-5 text-2xl font-bold text-white">Kinh nghiệm và kỹ năng chính</h2>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="mb-3 text-lg font-semibold text-cyan-300">Kinh nghiệm làm việc</h3>
-              <ul className="space-y-3 text-slate-300">
-                <li>• 8 năm vận hành máy CNC 2D</li>
-                <li>• 1 năm kinh nghiệm máy tiện cơ</li>
-                <li>• 1 năm kinh nghiệm máy phay cơ</li>
-              </ul>
+          <form onSubmit={handleSubmit} className="grid gap-5 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-slate-300">Họ tên</label>
+              <input
+                name="full_name"
+                value={form.full_name}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                placeholder="Nhập họ tên"
+                required
+              />
             </div>
 
             <div>
-              <h3 className="mb-3 text-lg font-semibold text-cyan-300">Kỹ năng chuyên môn</h3>
-              <ul className="space-y-3 text-slate-300">
-                <li>• Biết cơ bản các lệnh G-code CNC bán tự động</li>
-                <li>• Biết sử dụng máy mài phẳng</li>
-                <li>• Biết sử dụng máy cưa đứng và máy cưa nằm</li>
-                <li>• Hỗ trợ gia công tool, jig và các máy móc phục vụ sản xuất</li>
-              </ul>
+              <label className="mb-2 block text-sm font-medium text-slate-300">MSSV</label>
+              <input
+                name="mssv"
+                value={form.mssv}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                placeholder="VD: 425000181"
+                required
+              />
             </div>
-          </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">Lớp</label>
+              <input
+                name="class_name"
+                value={form.class_name}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                placeholder="VD: 25CT401"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">Giới tính</label>
+              <select
+                name="gender"
+                value={form.gender}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                required
+              >
+                <option value="">Chọn giới tính</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">Số điện thoại</label>
+              <input
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                placeholder="Nhập số điện thoại"
+                required
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-slate-300">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                placeholder="Nhập email"
+                required
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-slate-300">Link ảnh đại diện</label>
+              <input
+                type="url"
+                name="avatar_url"
+                value={form.avatar_url}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                placeholder="https://example.com/avatar.png"
+              />
+            </div>
+
+            {message ? (
+              <div className="md:col-span-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-200">
+                {message}
+              </div>
+            ) : null}
+
+            <div className="md:col-span-2">
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full rounded-xl bg-cyan-500 px-4 py-3 font-bold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "Đang lưu..." : "Lưu thông tin"}
+              </button>
+            </div>
+          </form>
         </section>
       </div>
     </main>

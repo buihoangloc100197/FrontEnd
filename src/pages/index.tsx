@@ -1,243 +1,180 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import axios from "axios";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { appConfig } from "@/lib/env";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const skillGroups = [
-  "G-code CNC bán tự động",
-  "Máy CNC 2D",
-  "Máy tiện cơ",
-  "Máy phay cơ",
-  "Máy mài phẳng",
-  "Máy cưa đứng",
-  "Máy cưa nằm",
-  "Gia công jig/tool",
-  "Đọc kỹ thuật, chuẩn bị nguyên liệu",
-  "Hỗ trợ sản xuất và bảo trì cơ bản",
-];
-
-const experiences = [
-  {
-    period: "8 năm",
-    title: "Vận hành máy CNC 2D",
-    description:
-      "Thực hiện gia công phụ kiện, chi tiết cơ khí theo bản vẽ kỹ thuật và quy trình sản xuất. Tập trung vào độ chính xác, tốc độ và kiểm soát chất lượng.",
-  },
-  {
-    period: "1 năm",
-    title: "Máy tiện cơ",
-    description:
-      "Tham gia gia công chi tiết tròn, kiểm tra kích thước, điều chỉnh dụng cụ và tối ưu quy trình thao tác trên máy tiện.",
-  },
-  {
-    period: "1 năm",
-    title: "Máy phay cơ",
-    description:
-      "Xử lý khối phôi, tạo hình và phụ kiện theo yêu cầu kỹ thuật, phối hợp với bộ phận sản xuất để đảm bảo tiến độ.",
-  },
-];
+type ApiResponse = {
+  message: string;
+  status: string;
+  database: string;
+  databasePath: string;
+  tableCount: number;
+  timestamp: string;
+  env: {
+    appName: string;
+    baseUrl: string;
+    apiKeySet: boolean;
+  };
+};
 
 export default function Home() {
   const router = useRouter();
+  const [apiData, setApiData] = useState<ApiResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    router.push("/auth/login");
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get<ApiResponse>("/api/hello");
+        setApiData(response.data);
+      } catch (error) {
+        console.error("Failed to load API data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <main
-      className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-slate-950 text-slate-100`}
-    >
-      <div className="mx-auto max-w-7xl px-6 py-6 lg:px-8">
-        <header className="sticky top-0 z-50 mb-10 rounded-full border border-white/10 bg-slate-900/70 px-5 py-3 backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 font-semibold text-slate-950">
-                BL
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-300">Portfolio</p>
-                <h1 className="text-sm font-bold tracking-wide text-white">
-                  Bùi Hoàng Lộc
+    <MainLayout title="Dashboard">
+      <div className="mx-auto max-w-6xl space-y-8 pb-12">
+        <section className="rounded-3xl border border-[#dfe8f5] bg-[#ffffff]/90 p-8 shadow-[0_18px_40px_rgba(46,107,255,0.10)] backdrop-blur-sm">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl space-y-6">
+              <span className="inline-flex items-center rounded-full border border-[#2e6bff]/30 bg-[#edf3ff] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#214ed6]">
+                Next.js + SQLite + API
+              </span>
+
+              <div className="space-y-4">
+                <h1 className="text-4xl font-black tracking-tight text-[#111827] sm:text-5xl">
+                  {appConfig.appName}
                 </h1>
-              </div>
-            </div>
-
-            <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
-              <a href="#about" className="transition hover:text-white">Giới thiệu</a>
-              <a href="#experience" className="transition hover:text-white">Kinh nghiệm</a>
-              <a href="#skills" className="transition hover:text-white">Kỹ năng</a>
-              <a href="#contact" className="transition hover:text-white">Liên hệ</a>
-            </nav>
-
-            <button
-              type="button"
-              onClick={() => router.push("/auth/thong-tin-ca-nhan")}
-              className="rounded-full border border-cyan-400/60 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-            >
-              Thông Tin Cá Nhân
-            </button>
-          </div>
-        </header>
-
-        <section className="grid items-center gap-10 pb-16 pt-8 lg:grid-cols-[1.3fr_0.7fr]">
-          <div>
-            <p className="mb-4 inline-flex rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
-              CNC Machinist / Production Specialist
-            </p>
-            <h2 className="max-w-xl text-4xl font-black leading-tight text-white md:text-6xl">
-              Bùi Hoàng Lộc
-            </h2>
-            <p className="mt-4 max-w-2xl text-lg text-slate-300 md:text-xl">
-              Chuyên ngành Công Nghệ Thông Tin, với nền tảng kỹ thuật thực tế trong
-              gia công cơ khí, vận hành máy CNC và hỗ trợ sản xuất công nghiệp.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <a
-                href="#experience"
-                className="rounded-full bg-cyan-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300"
-              >
-                Xem kinh nghiệm
-              </a>
-              <a
-                href="#skills"
-                className="rounded-full border border-slate-700 bg-slate-900 px-5 py-3 font-semibold text-white transition hover:border-slate-500 hover:bg-slate-800"
-              >
-                Kỹ năng của tôi
-              </a>
-            </div>
-
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-4">
-                <p className="text-2xl font-bold text-cyan-300">8+</p>
-                <p className="mt-1 text-sm text-slate-300">Năm vận hành CNC 2D</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-4">
-                <p className="text-2xl font-bold text-cyan-300">3</p>
-                <p className="mt-1 text-sm text-slate-300">Loại máy gia công chính</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-4">
-                <p className="text-2xl font-bold text-cyan-300">100%</p>
-                <p className="mt-1 text-sm text-slate-300">Tập trung sản xuất & độ chính xác</p>
-              </div>
-            </div>
-          </div>
-
-          <aside className="rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950 p-6 shadow-2xl shadow-cyan-950/30">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-500 text-xl font-black text-slate-950">
-                BL
-              </div>
-              <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
-                Sẵn sàng làm việc
-              </span>
-            </div>
-
-            <div className="space-y-4 text-sm text-slate-200">
-              <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                <p className="text-slate-400">Lớp</p>
-                <p className="mt-1 text-base font-semibold text-white">25CT401</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                <p className="text-slate-400">Chuyên ngành</p>
-                <p className="mt-1 text-base font-semibold text-white">
-                  Công Nghệ Thông Tin
+                <p className="text-lg text-[#4a5568]">
+                  Dự án mẫu với giao diện đẹp bằng Tailwind, API Next.js và database SQLite lưu trong thư mục data.
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                <p className="text-slate-400">Mục tiêu</p>
-                <p className="mt-1 text-base font-semibold text-white">
-                  Ứng dụng kỹ thuật và tư duy công nghiệp vào môi trường sản xuất hiện đại.
-                </p>
+
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href={appConfig.siteUrl}
+                  className="rounded-xl bg-[#2e6bff] px-5 py-3 font-semibold text-[#f5f1e8] transition hover:bg-[#214ed6]"
+                >
+                  Truy cập site
+                </a>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="rounded-xl border border-[#dfe8f5] bg-[#edf3ff] px-5 py-3 font-semibold text-[#111827] transition hover:border-[#2e6bff] hover:text-[#214ed6]"
+                >
+                  Tải lại
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-xl border border-[#e85d75]/30 bg-[#fff1f3] px-5 py-3 font-semibold text-[#b4233b] transition hover:bg-[#ffe4e8]"
+                >
+                  Đăng xuất
+                </button>
               </div>
             </div>
-          </aside>
-        </section>
 
-        <section id="about" className="grid gap-8 py-16 lg:grid-cols-[0.8fr_1.2fr]">
-          <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
-              Giới thiệu
-            </p>
-            <h3 className="text-3xl font-bold text-white">Tôi là người làm việc thực tế, tỉ mỉ và có trách nhiệm.</h3>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-7 text-lg leading-8 text-slate-300">
-            Tôi có 8 năm kinh nghiệm vận hành máy CNC 2D, cùng với 1 năm kinh nghiệm
-            ở máy tiện cơ và 1 năm ở máy phay cơ. Tôi quen với các thao tác gia công,
-            kiểm tra kích thước, điều chỉnh thiết bị và đảm bảo quy trình sản xuất ổn định.
-            Ngoài ra, tôi biết sử dụng các loại máy hỗ trợ như máy mài phẳng, máy cưa
-            đứng, máy cưa nằm và có khả năng hỗ trợ gia công jig, tool, thiết bị phụ trợ
-            trong sản xuất.
-          </div>
-        </section>
-
-        <section id="experience" className="py-6">
-          <p className="mb-8 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
-            Kinh nghiệm làm việc
-          </p>
-          <div className="grid gap-6 md:grid-cols-3">
-            {experiences.map((item) => (
-              <article
-                key={item.title}
-                className="rounded-3xl border border-white/10 bg-slate-900/80 p-6 transition hover:-translate-y-1 hover:border-cyan-400/40"
-              >
-                <div className="mb-4 inline-flex rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-300">
-                  {item.period}
+            <div className="grid w-full max-w-md gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              {[
+                { label: "API", value: "Axios" },
+                { label: "Frontend", value: "Next.js" },
+                { label: "DB", value: "SQLite" },
+                { label: "UI", value: "Tailwind" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-2xl border border-[#dfe8f5] bg-[#f8faff] p-4 text-left shadow-[0_10px_20px_rgba(46,107,255,0.04)]"
+                >
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#4a5568]">{item.label}</p>
+                  <p className="mt-2 text-xl font-bold text-[#111827]">{item.value}</p>
                 </div>
-                <h4 className="text-2xl font-bold text-white">{item.title}</h4>
-                <p className="mt-4 text-base leading-7 text-slate-300">{item.description}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section id="skills" className="py-20">
-          <p className="mb-8 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
-            Kỹ năng & kỹ thuật
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {skillGroups.map((skill) => (
-              <span
-                key={skill}
-                className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200"
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
-        </section>
-
-        <section id="contact" className="pb-20 pt-8">
-          <div className="rounded-3xl border border-cyan-400/20 bg-gradient-to-r from-cyan-500/10 via-slate-900 to-blue-500/10 p-8 md:p-10">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
-              Liên hệ
-            </p>
-            <h3 className="text-3xl font-bold text-white md:text-4xl">
-              Sẵn sàng đóng góp cho môi trường sản xuất, gia công và quy trình kỹ thuật.
-            </h3>
-            <div className="mt-6 flex flex-wrap gap-4">
-              <a
-                href="mailto:locbui@example.com"
-                className="rounded-full bg-cyan-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300"
-              >
-                Gửi Email
-              </a>
-              <a
-                href="#top"
-                className="rounded-full border border-slate-700 bg-slate-900 px-5 py-3 font-semibold text-white transition hover:border-slate-500"
-              >
-                Về đầu trang
-              </a>
+              ))}
             </div>
           </div>
+        </section>
+
+        <section className="grid gap-6 md:grid-cols-3">
+          <div className="rounded-2xl border border-[#dfe8f5] bg-[#ffffff] p-6 shadow-[0_10px_24px_rgba(17,24,39,0.03)]">
+            <p className="text-sm uppercase tracking-[0.2em] text-[#4a5568]">Domain</p>
+            <p className="mt-3 text-2xl font-bold text-[#111827]">{appConfig.siteUrl}</p>
+          </div>
+          <div className="rounded-2xl border border-[#dfe8f5] bg-[#ffffff] p-6 shadow-[0_10px_24px_rgba(17,24,39,0.03)]">
+            <p className="text-sm uppercase tracking-[0.2em] text-[#4a5568]">API URL</p>
+            <p className="mt-3 text-2xl font-bold text-[#111827]">{appConfig.apiBaseUrl}</p>
+          </div>
+          <div className="rounded-2xl border border-[#dfe8f5] bg-[#ffffff] p-6 shadow-[0_10px_24px_rgba(17,24,39,0.03)]">
+            <p className="text-sm uppercase tracking-[0.2em] text-[#4a5568]">Key</p>
+            <p className="mt-3 text-2xl font-bold text-[#111827]">
+              {appConfig.apiKey ? "Đã cấu hình" : "Chưa có"}
+            </p>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-[#dfe8f5] bg-[#ffffff]/90 p-8 shadow-[0_16px_30px_rgba(46,107,255,0.05)]">
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold text-[#111827]">Kết quả API</h2>
+            <span className="rounded-full border border-[#2dbe6a]/30 bg-[#eafaf0] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#1b8a4b]">
+              {loading ? "Đang tải" : "Sẵn sàng"}
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center gap-3 text-[#4a5568]">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#2e6bff] border-t-transparent" />
+              Đang kết nối đến API...
+            </div>
+          ) : apiData ? (
+            <div className="space-y-3 text-[#374151]">
+              <p>
+                <span className="font-semibold text-[#111827]">Message:</span> {apiData.message}
+              </p>
+              <p>
+                <span className="font-semibold text-[#111827]">Status:</span> {apiData.status}
+              </p>
+              <p>
+                <span className="font-semibold text-[#111827]">Database:</span> {apiData.database}
+              </p>
+              <p>
+                <span className="font-semibold text-[#111827]">SQLite path:</span> {apiData.databasePath}
+              </p>
+              <p>
+                <span className="font-semibold text-[#111827]">Rows in settings:</span> {apiData.tableCount}
+              </p>
+              <p>
+                <span className="font-semibold text-[#111827]">API key:</span>{" "}
+                {apiData.env.apiKeySet ? "Đã cấu hình" : "Không được cấu hình"}
+              </p>
+              <p>
+                <span className="font-semibold text-[#111827]">Timestamp:</span> {apiData.timestamp}
+              </p>
+            </div>
+          ) : (
+            <p className="text-[#b4233b]">Không thể gọi API. Vui lòng kiểm tra lại server.</p>
+          )}
+        </section>
+
+        <section className="space-y-4 rounded-3xl border border-[#dfe8f5] bg-[#ffffff]/90 p-8 shadow-[0_16px_30px_rgba(46,107,255,0.04)]">
+          <h2 className="text-2xl font-bold text-[#111827]">Nội dung dài</h2>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+            <div key={item} className="rounded-2xl border border-[#dfe8f5] bg-[#f8faff] p-4 text-[#4a5568] shadow-[0_8px_18px_rgba(46,107,255,0.03)]">
+              Mục nội dung #{item}: Đây là phần body có thể cuộn riêng trong layout, không ảnh hưởng đến body toàn trang.
+            </div>
+          ))}
         </section>
       </div>
-    </main>
+    </MainLayout>
   );
 }
 
