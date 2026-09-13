@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate:sqlite-to-supabase": "node scripts/migrate-sqlite-to-supabase.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.56.0",
@@ -26,6 +27,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "sqlite3": "^6.0.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

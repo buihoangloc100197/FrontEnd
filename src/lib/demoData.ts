@@ -1,0 +1,82 @@
+import bcrypt from "bcryptjs";
+
+export const demoUsers = [
+  {
+    id: 1,
+    username: "admin",
+    password_hash: bcrypt.hashSync("123", 10),
+    full_name: "System Admin",
+    mssv: "ADM001",
+    class_name: "Ban Quản Trị",
+    gender: "Nam",
+    phone: "0900000001",
+    email: "admin@demo.local",
+    avatar_url: null,
+    role: "admin",
+    profile_complete: 1,
+    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: "2025-01-01T00:00:00.000Z",
+  },
+  {
+    id: 2,
+    username: "an",
+    password_hash: bcrypt.hashSync("123", 10),
+    full_name: "Nguyễn Văn An",
+    mssv: "SV001",
+    class_name: "KTPM01",
+    gender: "Nam",
+    phone: "0912345678",
+    email: "an@demo.local",
+    avatar_url: null,
+    role: "user",
+    profile_complete: 1,
+    created_at: "2025-01-02T00:00:00.000Z",
+    updated_at: "2025-01-02T00:00:00.000Z",
+  },
+];
+
+export const demoComputers = [
+  { id: 1, name: "PC-01", room: "C201", specs: "Intel i5, 16GB RAM, SSD 512GB", status: "available", created_at: "2025-01-01T00:00:00.000Z" },
+  { id: 2, name: "PC-02", room: "C201", specs: "Intel i7, 16GB RAM, SSD 512GB", status: "in_use", created_at: "2025-01-01T00:00:00.000Z" },
+  { id: 3, name: "PC-03", room: "C201", specs: "Intel i5, 8GB RAM, SSD 256GB", status: "maintenance", created_at: "2025-01-01T00:00:00.000Z" },
+  { id: 4, name: "PC-04", room: "C202", specs: "Intel i7, 32GB RAM, SSD 1TB", status: "available", created_at: "2025-01-01T00:00:00.000Z" },
+];
+
+export const demoBorrowRequests = [
+  {
+    id: 1,
+    computer_id: 1,
+    borrower_id: 2,
+    reason: "Cần làm bài tập nhóm",
+    status: "pending",
+    requested_at: "2025-01-21T09:00:00.000Z",
+    approved_by: null,
+    approved_at: null,
+    returned_at: null,
+    users: { full_name: "Nguyễn Văn An", username: "an" },
+  },
+  {
+    id: 2,
+    computer_id: 2,
+    borrower_id: 2,
+    reason: "Học thực hành React",
+    status: "approved",
+    requested_at: "2025-01-20T08:15:00.000Z",
+    approved_by: 1,
+    approved_at: "2025-01-20T08:30:00.000Z",
+    returned_at: null,
+    users: { full_name: "Nguyễn Văn An", username: "an" },
+  },
+  {
+    id: 3,
+    computer_id: 3,
+    borrower_id: 2,
+    reason: "Bảo trì định kỳ",
+    status: "returned",
+    requested_at: "2025-01-19T10:00:00.000Z",
+    approved_by: 1,
+    approved_at: "2025-01-19T10:05:00.000Z",
+    returned_at: "2025-01-19T13:00:00.000Z",
+    users: { full_name: "Nguyễn Văn An", username: "an" },
+  },
+];

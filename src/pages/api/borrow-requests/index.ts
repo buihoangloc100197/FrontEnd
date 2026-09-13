@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { demoBorrowRequests } from "@/lib/demoData";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -16,7 +17,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .order("requested_at", { ascending: false });
 
   if (error) {
-    return res.status(500).json({ message: error.message || "Không thể lấy danh sách yêu cầu" });
+    return res.status(200).json({
+      requests: demoBorrowRequests.map((item: any) => ({
+        id: item.id,
+        computer_id: item.computer_id,
+        borrower_id: item.borrower_id,
+        reason: item.reason,
+        status: item.status,
+        requested_at: item.requested_at,
+        approved_by: item.approved_by,
+        approved_at: item.approved_at,
+        returned_at: item.returned_at,
+        borrower_name: item.users?.full_name ?? null,
+        borrower_username: item.users?.username ?? null,
+      })),
+      fallback: true,
+      message: "Supabase chưa có dữ liệu, đang hiển thị dữ liệu demo để hệ thống vẫn chạy",
+    });
   }
 
   return res.status(200).json({

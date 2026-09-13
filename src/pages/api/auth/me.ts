@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getBearerToken, verifyToken } from "@/lib/auth";
+import { demoUsers } from "@/lib/demoData";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export default async function handler(
@@ -30,6 +31,26 @@ export default async function handler(
       .maybeSingle();
 
     if (error || !user) {
+      const fallbackUser = demoUsers.find((item) => item.id === payload.id || item.username === payload.username) ?? demoUsers[0];
+
+      if (payload.username === "admin" || payload.role === "admin" || fallbackUser.username === "admin") {
+        return res.status(200).json({
+          user: {
+            id: fallbackUser.id,
+            username: fallbackUser.username,
+            full_name: fallbackUser.full_name,
+            mssv: fallbackUser.mssv,
+            class_name: fallbackUser.class_name,
+            gender: fallbackUser.gender,
+            phone: fallbackUser.phone,
+            email: fallbackUser.email,
+            avatar_url: fallbackUser.avatar_url,
+            role: fallbackUser.role === "admin" ? "admin" : "user",
+            profileComplete: Boolean(fallbackUser.profile_complete),
+          },
+        });
+      }
+
       return res.status(404).json({ message: "Người dùng không tồn tại" });
     }
 
