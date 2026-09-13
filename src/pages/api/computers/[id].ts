@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import db from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const idParam = req.query.id;
   const id = Number(Array.isArray(idParam) ? idParam[0] : idParam);
 
@@ -10,29 +10,22 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ message: "ID máy tính không hợp lệ" });
   }
 
-  if (req.method === "GET") {
-    const computer = db
-      .prepare(
-        "SELECT id, name, room, specs, status, created_at FROM computers WHERE id = ?",
-      )
-      .get(id) as
-      | {
-          id: number;
-          name: string;
-          room: string;
-          specs: string | null;
-          status: string;
-          created_at: string;
-        }
-      | undefined;
+  if (!supabaseAdmin) {
+    return res.status(500).json({ message: "Supabase chưa được cấu hình" });
+  }
 
-    if (!computer) {
+  if (req.method === "GET") {
+    const { data: computer, error } = await supabaseAdmin
+      .from("computers")
+      .select("id, name, room, specs, status, created_at")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error || !computer) {
       return res.status(404).json({ message: "Không tìm thấy máy tính" });
     }
 
-    return res.status(200).json({
-      computer,
-    });
+    return res.status(200).json({ computer });
   }
 
   if (req.method !== "PUT" && req.method !== "PATCH") {
@@ -48,9 +41,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const specs = String(req.body?.specs ?? "").trim() || null;
   const status = String(req.body?.status ?? "available").trim() || "available";
 
-  const existing = db
-    .prepare("SELECT id FROM computers WHERE id = ?")
-    .get(id) as { id: number } | undefined;
+  const { data: existing } = await supabaseAdmin
+    .from("computers")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
 
   if (!existing) {
     return res.status(404).json({ message: "Không tìm thấy máy tính để cập nhật" });
@@ -66,22 +61,21 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     ? status
     : "available";
 
-  db.prepare(
-    "UPDATE computers SET name = ?, room = ?, specs = ?, status = ? WHERE id = ?",
-  ).run(name, room, specs, normalizedStatus, id);
+  const { data: updated, error } = await supabaseAdmin
+    .from("computers")
+    .update({
+      name,
+      room,
+      specs,
+      status: normalizedStatus,
+    })
+    .eq("id", id)
+    .select("id, name, room, specs, status, created_at")
+    .single();
 
-  const updated = db
-    .prepare(
-      "SELECT id, name, room, specs, status, created_at FROM computers WHERE id = ?",
-    )
-    .get(id) as {
-      id: number;
-      name: string;
-      room: string;
-      specs: string | null;
-      status: string;
-      created_at: string;
-    };
+  if (error || !updated) {
+    return res.status(500).json({ message: error?.message || "Cập nhật máy tính thất bại" });
+  }
 
   return res.status(200).json({
     message: "Cập nhật máy tính thành công",

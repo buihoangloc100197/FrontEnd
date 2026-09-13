@@ -1,9 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import db from "@/lib/db";
+import { supabaseAdmin } from "@/lib/supabase";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Phương thức không hợp lệ" });
+  }
+
+  if (!supabaseAdmin) {
+    return res.status(500).json({ message: "Supabase chưa được cấu hình" });
   }
 
   const idParam = req.query.id;
@@ -13,25 +17,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ message: "ID yêu cầu không hợp lệ" });
   }
 
-  const request = db
-    .prepare(
-      "SELECT id, computer_id, borrower_id, reason, status, requested_at, approved_by, approved_at, returned_at FROM borrow_requests WHERE id = ?",
-    )
-    .get(id) as
-    | {
-        id: number;
-        computer_id: number;
-        borrower_id: number;
-        reason: string | null;
-        status: string;
-        requested_at: string;
-        approved_by: number | null;
-        approved_at: string | null;
-        returned_at: string | null;
-      }
-    | undefined;
+  const { data: request, error } = await supabaseAdmin
+    .from("borrow_requests")
+    .select("id, computer_id, borrower_id, reason, status, requested_at, approved_by, approved_at, returned_at")
+    .eq("id", id)
+    .maybeSingle();
 
-  if (!request) {
+  if (error || !request) {
     return res.status(404).json({ message: "Không tìm thấy yêu cầu mượn máy" });
   }
 

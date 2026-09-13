@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import db from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Phương thức không hợp lệ" });
   }
@@ -26,9 +26,20 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     ? status
     : "available";
 
-  const existingComputer = db
-    .prepare("SELECT id FROM computers WHERE name = ? AND room = ?")
-    .get(name, room) as { id: number } | undefined;
+  if (!supabaseAdmin) {
+    return res.status(500).json({ message: "Supabase chưa được cấu hình" });
+  }
+
+  const { data: existingComputer, error: existingError } = await supabaseAdmin
+    .from("computers")
+    .select("id")
+    .eq("name", name)
+    .eq("room", room)
+    .maybeSingle();
+
+  if (existingError) {
+    return res.status(500).json({ message: existingError.message || "Không thể kiểm tra máy tính" });
+  }
 
   if (existingComputer) {
     return res.status(409).json({
@@ -36,24 +47,20 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  const result = db
-    .prepare(
-      "INSERT INTO computers (name, room, specs, status, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
-    )
-    .run(name, room, specs, normalizedStatus);
+  const { data: created, error } = await supabaseAdmin
+    .from("computers")
+    .insert({
+      name,
+      room,
+      specs,
+      status: normalizedStatus,
+    })
+    .select("id, name, room, specs, status, created_at")
+    .single();
 
-  const created = db
-    .prepare(
-      "SELECT id, name, room, specs, status, created_at FROM computers WHERE id = ?",
-    )
-    .get(Number(result.lastInsertRowid)) as {
-      id: number;
-      name: string;
-      room: string;
-      specs: string | null;
-      status: string;
-      created_at: string;
-    };
+  if (error || !created) {
+    return res.status(500).json({ message: error?.message || "Thêm máy tính thất bại" });
+  }
 
   return res.status(201).json({
     message: "Thêm máy tính thành công",

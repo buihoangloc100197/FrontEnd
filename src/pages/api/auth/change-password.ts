@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
-import db from "@/lib/db";
 import { getBearerToken, verifyToken } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
@@ -41,17 +41,37 @@ export default function handler(
       });
     }
 
-    const user = db
-      .prepare("SELECT password_hash FROM users WHERE id = ?")
-      .get(payload.id) as { password_hash: string } | undefined;
+    if (!supabaseAdmin) {
+      return res.status(500).json({ message: "Supabase chưa được cấu hình" });
+    }
 
-    if (!user || !bcrypt.compareSync(currentPassword, user.password_hash)) {
+    const { data: user, error } = await supabaseAdmin
+      .from("users")
+      .select("password_hash")
+      .eq("id", payload.id)
+      .maybeSingle();
+
+    if (error || !user) {
+      return res.status(401).json({ message: "Người dùng không tồn tại" });
+    }
+
+    if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
       return res.status(401).json({ message: "Mật khẩu hiện tại không đúng" });
     }
 
     const hash = bcrypt.hashSync(newPassword, 10);
 
-    db.prepare("UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(hash, payload.id);
+    const { error: updateError } = await supabaseAdmin
+      .from("users")
+      .update({
+        password_hash: hash,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", payload.id);
+
+    if (updateError) {
+      return res.status(500).json({ message: updateError.message || "Đổi mật khẩu thất bại" });
+    }
 
     return res.status(200).json({ message: "Đổi mật khẩu thành công" });
   } catch (error) {

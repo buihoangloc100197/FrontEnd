@@ -1,10 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import db from "@/lib/db";
 import { getBearerToken, verifyToken } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Phương thức không hợp lệ" });
+  }
+
+  if (!supabaseAdmin) {
+    return res.status(500).json({ message: "Supabase chưa được cấu hình" });
   }
 
   const authToken = getBearerToken(req);
@@ -46,11 +50,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ message: "borrower_id không hợp lệ" });
   }
 
-  const computer = db
-    .prepare("SELECT id, status FROM computers WHERE id = ?")
-    .get(computerId) as { id: number; status: string } | undefined;
+  const { data: computer, error: machineError } = await supabaseAdmin
+    .from("computers")
+    .select("id, status")
+    .eq("id", computerId)
+    .maybeSingle();
 
-  if (!computer) {
+  if (machineError || !computer) {
     return res.status(404).json({ message: "Không tìm thấy máy tính" });
   }
 
@@ -60,11 +66,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  const borrower = db
-    .prepare("SELECT id FROM users WHERE id = ?")
-    .get(borrowerId) as { id: number } | undefined;
+  const { data: borrower, error: borrowerError } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("id", borrowerId)
+    .maybeSingle();
 
-  if (!borrower) {
+  if (borrowerError || !borrower) {
     return res.status(404).json({ message: "Không tìm thấy người mượn" });
   }
 
@@ -72,36 +80,20 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     ? status
     : "pending";
 
-  const result = db
-    .prepare(
-      `INSERT INTO borrow_requests (
-        computer_id,
-        borrower_id,
-        reason,
-        status,
-        requested_at,
-        approved_by,
-        approved_at,
-        returned_at
-      ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, NULL, NULL)`,
-    )
-    .run(computerId, borrowerId, reason, normalizedStatus);
+  const { data: created, error } = await supabaseAdmin
+    .from("borrow_requests")
+    .insert({
+      computer_id: computerId,
+      borrower_id: borrowerId,
+      reason,
+      status: normalizedStatus,
+    })
+    .select("id, computer_id, borrower_id, reason, status, requested_at, approved_by, approved_at, returned_at")
+    .single();
 
-  const created = db
-    .prepare(
-      "SELECT id, computer_id, borrower_id, reason, status, requested_at, approved_by, approved_at, returned_at FROM borrow_requests WHERE id = ?",
-    )
-    .get(Number(result.lastInsertRowid)) as {
-      id: number;
-      computer_id: number;
-      borrower_id: number;
-      reason: string | null;
-      status: string;
-      requested_at: string;
-      approved_by: number | null;
-      approved_at: string | null;
-      returned_at: string | null;
-    };
+  if (error || !created) {
+    return res.status(500).json({ message: error?.message || "Tạo yêu cầu thất bại" });
+  }
 
   return res.status(201).json({
     message: "Tạo yêu cầu mượn máy thành công",

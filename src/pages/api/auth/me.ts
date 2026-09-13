@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import db from "@/lib/db";
 import { getBearerToken, verifyToken } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
@@ -18,27 +18,18 @@ export default function handler(
 
   try {
     const payload = verifyToken(token);
-    const user = db
-      .prepare(
-        "SELECT id, username, full_name, mssv, class_name, gender, phone, email, avatar_url, role, profile_complete FROM users WHERE id = ?",
-      )
-      .get(payload.id) as
-      | {
-          id: number;
-          username: string;
-          full_name: string | null;
-          mssv: string | null;
-          class_name: string | null;
-          gender: string | null;
-          phone: string | null;
-          email: string | null;
-          avatar_url: string | null;
-          role: string | null;
-          profile_complete: number;
-        }
-      | undefined;
 
-    if (!user) {
+    if (!supabaseAdmin) {
+      return res.status(500).json({ message: "Supabase chưa được cấu hình" });
+    }
+
+    const { data: user, error } = await supabaseAdmin
+      .from("users")
+      .select("id, username, full_name, mssv, class_name, gender, phone, email, avatar_url, role, profile_complete")
+      .eq("id", payload.id)
+      .maybeSingle();
+
+    if (error || !user) {
       return res.status(404).json({ message: "Người dùng không tồn tại" });
     }
 

@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
-import db from "@/lib/db";
+import { supabaseAdmin } from "@/lib/supabase";
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
@@ -52,11 +52,20 @@ export default function handler(
     });
   }
 
-  const existingUser = db
-    .prepare("SELECT id FROM users WHERE username = ? OR email = ?")
-    .get(username, email ?? "") as { id: number } | undefined;
+  if (!supabaseAdmin) {
+    return res.status(500).json({ message: "Supabase chưa được cấu hình" });
+  }
 
-  if (existingUser) {
+  const { data: existingUsers, error: existingError } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .or(`username.eq.${username},email.eq.${email ?? ""}`);
+
+  if (existingError) {
+    return res.status(500).json({ message: existingError.message || "Không thể kiểm tra người dùng" });
+  }
+
+  if ((existingUsers ?? []).length > 0) {
     return res.status(409).json({
       message: "Tên đăng nhập hoặc email đã tồn tại",
     });
@@ -65,19 +74,30 @@ export default function handler(
   const hash = bcrypt.hashSync(password, 10);
   const isProfileComplete = Boolean(fullName && email);
 
-  const result = db
-    .prepare(
-      "INSERT INTO users (username, password_hash, full_name, email, role, profile_complete, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-    )
-    .run(username, hash, fullName, email, "user", isProfileComplete ? 1 : 0);
+  const { data: createdUser, error: insertError } = await supabaseAdmin
+    .from("users")
+    .insert({
+      username,
+      password_hash: hash,
+      full_name: fullName,
+      email,
+      role: "user",
+      profile_complete: isProfileComplete ? 1 : 0,
+    })
+    .select("id, username, full_name, email")
+    .single();
+
+  if (insertError || !createdUser) {
+    return res.status(500).json({ message: insertError?.message || "Đăng ký thất bại" });
+  }
 
   return res.status(201).json({
     message: "Đăng ký thành công",
     user: {
-      id: Number(result.lastInsertRowid),
-      username,
-      full_name: fullName,
-      email,
+      id: createdUser.id,
+      username: createdUser.username,
+      full_name: createdUser.full_name,
+      email: createdUser.email,
     },
   });
 }

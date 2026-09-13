@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
-import db from "@/lib/db";
 import { createToken } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
 
 type UserRow = {
   id: number;
@@ -17,7 +17,7 @@ type UserRow = {
   profile_complete: number;
 };
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
@@ -34,30 +34,40 @@ export default function handler(
     });
   }
 
-  const user = db
-    .prepare(
-      "SELECT * FROM users WHERE username = ?",
-    )
-    .get(username) as UserRow | undefined;
+  if (!supabaseAdmin) {
+    return res.status(500).json({ message: "Supabase chưa được cấu hình" });
+  }
 
-  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+  const { data: user, error } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (error || !user) {
+    return res.status(401).json({ message: "Tên đăng nhập hoặc mật khẩu không đúng" });
+  }
+
+  const userRow = user as UserRow;
+
+  if (!bcrypt.compareSync(password, userRow.password_hash)) {
     return res.status(401).json({ message: "Tên đăng nhập hoặc mật khẩu không đúng" });
   }
 
   const profileComplete = Boolean(
-    user.full_name &&
-      user.mssv &&
-      user.class_name &&
-      user.gender &&
-      user.phone &&
-      user.email,
+    userRow.full_name &&
+      userRow.mssv &&
+      userRow.class_name &&
+      userRow.gender &&
+      userRow.phone &&
+      userRow.email,
   );
 
-  const role = user.role === "admin" ? "admin" : "user";
+  const role = userRow.role === "admin" ? "admin" : "user";
 
   const token = createToken({
-    id: user.id,
-    username: user.username,
+    id: userRow.id,
+    username: userRow.username,
     profileComplete,
     role,
   });
@@ -67,14 +77,14 @@ export default function handler(
     token,
     requireProfile: !profileComplete,
     user: {
-      id: user.id,
-      username: user.username,
-      full_name: user.full_name,
-      mssv: user.mssv,
-      class_name: user.class_name,
-      gender: user.gender,
-      phone: user.phone,
-      email: user.email,
+      id: userRow.id,
+      username: userRow.username,
+      full_name: userRow.full_name,
+      mssv: userRow.mssv,
+      class_name: userRow.class_name,
+      gender: userRow.gender,
+      phone: userRow.phone,
+      email: userRow.email,
       role,
       profileComplete,
     },

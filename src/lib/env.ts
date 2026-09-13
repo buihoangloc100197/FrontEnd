@@ -4,6 +4,6 @@ export const appConfig = {
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   appDomain: process.env.APP_DOMAIN ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   apiKey: process.env.API_KEY ?? "demo-api-key",
-  databaseUrl: process.env.DATABASE_URL ?? "data/app.db",
+  databaseUrl: process.env.DATABASE_URL ?? "supabase",
   jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-me",
 };

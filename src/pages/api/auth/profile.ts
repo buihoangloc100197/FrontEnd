@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import db from "@/lib/db";
 import { getBearerToken, verifyToken } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
@@ -15,28 +15,18 @@ export default function handler(
   try {
     const payload = verifyToken(token);
 
-    if (req.method === "GET") {
-      const user = db
-        .prepare(
-          "SELECT id, username, full_name, mssv, class_name, gender, phone, email, avatar_url, role, profile_complete FROM users WHERE id = ?",
-        )
-        .get(payload.id) as
-        | {
-            id: number;
-            username: string;
-            full_name: string | null;
-            mssv: string | null;
-            class_name: string | null;
-            gender: string | null;
-            phone: string | null;
-            email: string | null;
-            avatar_url: string | null;
-            role: string | null;
-            profile_complete: number;
-          }
-        | undefined;
+    if (!supabaseAdmin) {
+      return res.status(500).json({ message: "Supabase chưa được cấu hình" });
+    }
 
-      if (!user) {
+    if (req.method === "GET") {
+      const { data: user, error } = await supabaseAdmin
+        .from("users")
+        .select("id, username, full_name, mssv, class_name, gender, phone, email, avatar_url, role, profile_complete")
+        .eq("id", payload.id)
+        .maybeSingle();
+
+      if (error || !user) {
         return res.status(404).json({ message: "Người dùng không tồn tại" });
       }
 
@@ -78,9 +68,24 @@ export default function handler(
 
     const profileComplete = Boolean(fullName && mssv && className && gender && phone && email);
 
-    db.prepare(
-      "UPDATE users SET full_name = ?, mssv = ?, class_name = ?, gender = ?, phone = ?, email = ?, avatar_url = ?, profile_complete = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-    ).run(fullName, mssv, className, gender, phone, email, avatarUrl || null, profileComplete ? 1 : 0, payload.id);
+    const { error: updateError } = await supabaseAdmin
+      .from("users")
+      .update({
+        full_name: fullName,
+        mssv,
+        class_name: className,
+        gender,
+        phone,
+        email,
+        avatar_url: avatarUrl || null,
+        profile_complete: profileComplete ? 1 : 0,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", payload.id);
+
+    if (updateError) {
+      return res.status(500).json({ message: updateError.message || "Cập nhật thất bại" });
+    }
 
     return res.status(200).json({
       message: "Cập nhật thông tin cá nhân thành công",
