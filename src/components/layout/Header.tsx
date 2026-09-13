@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
+import { clearStoredSession, getStoredSessionUser, saveStoredSessionUser } from "@/lib/session";
 
 type HeaderProps = {
   title: string;
@@ -13,6 +14,7 @@ type UserSummary = {
   username?: string;
   full_name?: string | null;
   avatar_url?: string | null;
+  role?: "admin" | "user" | string;
 };
 
 export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
@@ -22,9 +24,15 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
+    const persistedUser = getStoredSessionUser();
+    if (persistedUser) {
+      setUser(persistedUser);
+    }
+
     const token = localStorage.getItem("auth_token");
     if (!token) {
       setUser(null);
+      clearStoredSession();
       return;
     }
 
@@ -36,10 +44,12 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
           },
         });
 
-        setUser(response.data.user ?? null);
+        const nextUser = response.data.user ?? null;
+        setUser(nextUser);
+        saveStoredSessionUser(nextUser);
       } catch (error) {
         console.error("Không thể tải thông tin người dùng", error);
-        setUser(null);
+        setUser(persistedUser ?? null);
       }
     };
 
@@ -59,9 +69,11 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
 
   const displayName = user?.full_name?.trim() || user?.username?.trim() || "User";
   const initials = displayName.charAt(0).toUpperCase();
+  const roleLabel = user?.role === "admin" ? "Quản trị viên" : "Người dùng";
 
   const handleLogout = () => {
-    localStorage.removeItem("auth_token");
+    clearStoredSession();
+    setUser(null);
     setIsMenuOpen(false);
     router.push("/auth/login");
   };
@@ -130,6 +142,7 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
                 <div className="border-b border-[#edf3ff] px-4 py-3">
                   <p className="text-xs uppercase tracking-[0.2em] text-[#4a5568]">Tài khoản</p>
                   <p className="mt-1 font-semibold text-[#111827]">{displayName}</p>
+                  <p className="mt-1 text-xs text-[#4a5568]">Vai trò: {roleLabel}</p>
                 </div>
 
                 <button

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
+import { saveStoredSessionUser } from "@/lib/session";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +22,10 @@ export default function LoginPage() {
     try {
       const response = await api.post("/api/auth/login", form);
       const token = response.data.token;
+      const user = response.data.user ?? null;
+
       localStorage.setItem("auth_token", token);
+      saveStoredSessionUser(user);
 
       if (response.data.requireProfile) {
         router.push("/auth/thong-tin-ca-nhan");
