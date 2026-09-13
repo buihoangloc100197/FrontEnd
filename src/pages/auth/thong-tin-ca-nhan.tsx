@@ -20,6 +20,7 @@ export default function PersonalInfoPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [avatarMode, setAvatarMode] = useState<"upload" | "link">("link");
   const [message, setMessage] = useState("");
   const [form, setForm] = useState<ProfileForm>({
     full_name: "",
@@ -71,6 +72,9 @@ export default function PersonalInfoPage() {
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = event.target;
+    if (name === "avatar_url") {
+      setAvatarMode("link");
+    }
     setForm((current) => ({ ...current, [name]: value }));
   };
 
@@ -109,6 +113,7 @@ export default function PersonalInfoPage() {
       }
 
       const publicUrl = `${getSupabaseUrl()}/storage/v1/object/public/avatars/${data?.path ?? fileName}`;
+      setAvatarMode("upload");
       setForm((current) => ({ ...current, avatar_url: publicUrl }));
       setMessage("Ảnh đại diện đã được tải lên Supabase thành công");
     } catch (error: any) {
@@ -251,7 +256,36 @@ export default function PersonalInfoPage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-slate-300">Link ảnh đại diện</label>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label className="block text-sm font-medium text-slate-300">Ảnh đại diện</label>
+                <div className="flex items-center gap-2 text-xs text-slate-300">
+                  <button
+                    type="button"
+                    onClick={() => setAvatarMode("upload")}
+                    className={[
+                      "rounded-full border px-3 py-1.5 transition",
+                      avatarMode === "upload"
+                        ? "border-cyan-500 bg-cyan-500/15 text-cyan-300"
+                        : "border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-500/50",
+                    ].join(" ")}
+                  >
+                    Tải ảnh lên
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAvatarMode("link")}
+                    className={[
+                      "rounded-full border px-3 py-1.5 transition",
+                      avatarMode === "link"
+                        ? "border-cyan-500 bg-cyan-500/15 text-cyan-300"
+                        : "border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-500/50",
+                    ].join(" ")}
+                  >
+                    Dùng link
+                  </button>
+                </div>
+              </div>
+
               <div className="relative">
                 <input
                   type="url"
@@ -264,7 +298,10 @@ export default function PersonalInfoPage() {
 
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    setAvatarMode("upload");
+                    fileInputRef.current?.click();
+                  }}
                   disabled={uploadingImage}
                   className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/10 text-lg text-cyan-300 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label="Tải ảnh lên Supabase"
@@ -281,6 +318,12 @@ export default function PersonalInfoPage() {
                   onChange={handleUploadAvatar}
                 />
               </div>
+
+              <p className="mt-2 text-xs text-slate-400">
+                {avatarMode === "upload"
+                  ? "Hình ảnh đang được lưu bằng upload lên Supabase Storage."
+                  : "Bạn đang lưu link ảnh trực tiếp vào dữ liệu người dùng."}
+              </p>
             </div>
 
             {message ? (
