@@ -90,6 +90,7 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
   const initials = displayName.charAt(0).toUpperCase();
   const effectiveRole = normalizeUserRole(user?.role, user?.username);
   const roleLabel = effectiveRole === "admin" ? "Quản trị viên" : "Người dùng";
+  const avatarSrc = user?.avatar_url ? user.avatar_url : "";
 
   const handleLogout = () => {
     clearStoredSession();
@@ -142,10 +143,10 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
               </span>
 
               <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#dfeaff] via-[#b7c9ff] to-[#6978ff] font-bold text-[#111827]">
-                {user?.avatar_url ? (
+                {avatarSrc ? (
                   <img
-                    key={user.avatar_url}
-                    src={user.avatar_url}
+                    key={`${user?.id ?? "user"}-${avatarSrc}`}
+                    src={avatarSrc}
                     alt={displayName}
                     className="h-full w-full object-cover"
                   />

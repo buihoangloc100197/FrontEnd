@@ -98,6 +98,25 @@ export function saveStoredSessionUser(user: SessionUser | null) {
   window.localStorage.removeItem("auth_user");
 }
 
+export function buildAvatarUrlWithVersion(url?: string | null): string | null {
+  if (!url) {
+    return null;
+  }
+
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    parsed.searchParams.set("v", String(Date.now()));
+    return parsed.toString();
+  } catch {
+    return `${trimmed}${trimmed.includes("?") ? "&" : "?"}v=${Date.now()}`;
+  }
+}
+
 export function clearStoredSession() {
   if (typeof window === "undefined") {
     return;

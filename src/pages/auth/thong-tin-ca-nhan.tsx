@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
-import { getSupabaseUrl, supabase } from "@/lib/supabase";
-import { getStoredSessionToken, getStoredSessionUser, saveStoredSessionUser } from "@/lib/session";
+import { getAvatarBucketName, getSupabaseUrl, supabase } from "@/lib/supabase";
+import { buildAvatarUrlWithVersion, getStoredSessionToken, getStoredSessionUser, saveStoredSessionUser } from "@/lib/session";
 
 type ProfileForm = {
   full_name: string;
@@ -101,19 +101,30 @@ export default function PersonalInfoPage() {
       setUploadingImage(true);
       setMessage("");
 
-      const fileName = `avatars/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-      const { data, error } = await supabase.storage.from("avatars").upload(fileName, file, {
+      const bucketName = getAvatarBucketName();
+      const objectName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+      const { data, error } = await supabase.storage.from(bucketName).upload(objectName, file, {
         cacheControl: "3600",
         upsert: true,
         contentType: file.type || "image/jpeg",
       });
 
       if (error) {
+        const isBucketMissing = error?.message?.toLowerCase().includes("bucket not found") || error?.status === 404;
+        if (isBucketMissing) {
+          throw new Error(
+            `Bucket "${bucketName}" chưa tồn tại trong Supabase Storage. Vui lòng tạo bucket "${bucketName}" và bật Public.`
+          );
+        }
         throw error;
       }
 
-      const publicUrl = `${getSupabaseUrl()}/storage/v1/object/public/avatars/${data?.path ?? fileName}`;
-      const cacheBustedUrl = `${publicUrl}${publicUrl.includes("?") ? "&" : "?"}t=${Date.now()}`;
+      const rawPath = data?.path ?? data?.fullPath ?? objectName;
+      const publicPath = rawPath.startsWith(`${bucketName}/`)
+        ? rawPath.slice(bucketName.length + 1)
+        : rawPath;
+      const publicUrl = `${getSupabaseUrl().replace(/\/$/, "")}/storage/v1/object/public/${bucketName}/${publicPath}`;
+      const cacheBustedUrl = buildAvatarUrlWithVersion(publicUrl) ?? publicUrl;
       setAvatarPreviewUrl(cacheBustedUrl);
       setForm((current) => ({ ...current, avatar_url: cacheBustedUrl }));
       setMessage("Ảnh đại diện đã được tải lên Supabase thành công");
@@ -144,11 +155,7 @@ export default function PersonalInfoPage() {
         },
       );
 
-      const normalizedAvatarUrl = form.avatar_url
-        ? form.avatar_url.includes("?")
-          ? `${form.avatar_url}&v=${Date.now()}`
-          : `${form.avatar_url}?v=${Date.now()}`
-        : form.avatar_url;
+      const normalizedAvatarUrl = form.avatar_url ? buildAvatarUrlWithVersion(form.avatar_url) : form.avatar_url;
 
       const storedUser = getStoredSessionUser();
       const updatedUser = {
