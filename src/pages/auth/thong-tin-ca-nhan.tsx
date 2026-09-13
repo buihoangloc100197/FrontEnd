@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
+import { getSupabaseUrl, supabase } from "@/lib/supabase";
 import { getStoredSessionToken } from "@/lib/session";
 
 type ProfileForm = {
@@ -15,8 +16,10 @@ type ProfileForm = {
 
 export default function PersonalInfoPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [message, setMessage] = useState("");
   const [form, setForm] = useState<ProfileForm>({
     full_name: "",
@@ -69,6 +72,52 @@ export default function PersonalInfoPage() {
   ) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleUploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setMessage("Vui lòng chọn file ảnh hợp lệ");
+      event.target.value = "";
+      return;
+    }
+
+    if (!supabase) {
+      setMessage("Supabase chưa được cấu hình, vui lòng kiểm tra biến môi trường");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      setMessage("");
+
+      const fileName = `avatars/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+      const { data, error } = await supabase.storage.from("avatars").upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type || "image/jpeg",
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const publicUrl = `${getSupabaseUrl()}/storage/v1/object/public/avatars/${data?.path ?? fileName}`;
+      setForm((current) => ({ ...current, avatar_url: publicUrl }));
+      setMessage("Ảnh đại diện đã được tải lên Supabase thành công");
+    } catch (error: any) {
+      console.error("Upload avatar failed:", error);
+      setMessage(error?.message || "Tải ảnh lên Supabase thất bại");
+    } finally {
+      setUploadingImage(false);
+      event.target.value = "";
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -203,14 +252,35 @@ export default function PersonalInfoPage() {
 
             <div className="md:col-span-2">
               <label className="mb-2 block text-sm font-medium text-slate-300">Link ảnh đại diện</label>
-              <input
-                type="url"
-                name="avatar_url"
-                value={form.avatar_url}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
-                placeholder="https://example.com/avatar.png"
-              />
+              <div className="relative">
+                <input
+                  type="url"
+                  name="avatar_url"
+                  value={form.avatar_url}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 pr-12 text-white outline-none focus:border-cyan-500"
+                  placeholder="https://example.com/avatar.png"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/10 text-lg text-cyan-300 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Tải ảnh lên Supabase"
+                  title="Tải ảnh từ máy lên Supabase"
+                >
+                  {uploadingImage ? "…" : "📷"}
+                </button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleUploadAvatar}
+                />
+              </div>
             </div>
 
             {message ? (
