@@ -125,6 +125,7 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
               <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#dfeaff] via-[#b7c9ff] to-[#6978ff] font-bold text-[#111827]">
                 {user?.avatar_url ? (
                   <img
+                    key={user.avatar_url}
                     src={user.avatar_url}
                     alt={displayName}
                     className="h-full w-full object-cover"

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
 import { getSupabaseUrl, supabase } from "@/lib/supabase";
-import { getStoredSessionToken } from "@/lib/session";
+import { getStoredSessionToken, getStoredSessionUser, saveStoredSessionUser } from "@/lib/session";
 
 type ProfileForm = {
   full_name: string;
@@ -137,6 +137,13 @@ export default function PersonalInfoPage() {
           },
         },
       );
+
+      const storedUser = getStoredSessionUser();
+      saveStoredSessionUser({
+        ...storedUser,
+        ...form,
+        avatar_url: form.avatar_url || storedUser?.avatar_url || null,
+      });
 
       setMessage(response.data.message);
       setTimeout(() => router.push("/"), 800);
@@ -273,6 +280,20 @@ export default function PersonalInfoPage() {
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
                 placeholder="Nhập link ảnh nếu muốn dùng link trực tiếp"
               />
+
+              {form.avatar_url ? (
+                <div className="mt-3 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 p-3">
+                  <img
+                    key={form.avatar_url}
+                    src={form.avatar_url}
+                    alt="Avatar preview"
+                    className="h-24 w-24 rounded-full object-cover ring-2 ring-cyan-500/40"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                  />
+                </div>
+              ) : null}
 
               <input
                 ref={fileInputRef}
