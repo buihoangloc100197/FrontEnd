@@ -6,6 +6,17 @@ export type SessionUser = {
   role?: "admin" | "user" | string;
 };
 
+export function normalizeUserRole(role?: string | null, username?: string): "admin" | "user" {
+  const normalizedRole = String(role ?? "").trim().toLowerCase();
+  const normalizedUsername = String(username ?? "").trim().toLowerCase();
+
+  if (normalizedRole === "admin" || normalizedUsername === "admin") {
+    return "admin";
+  }
+
+  return "user";
+}
+
 export function getStoredSessionUser(): SessionUser | null {
   if (typeof window === "undefined") {
     return null;
@@ -17,7 +28,15 @@ export function getStoredSessionUser(): SessionUser | null {
       return null;
     }
 
-    return JSON.parse(raw) as SessionUser;
+    const parsed = JSON.parse(raw) as SessionUser;
+    if (!parsed) {
+      return null;
+    }
+
+    return {
+      ...parsed,
+      role: normalizeUserRole(parsed.role, parsed.username),
+    };
   } catch (error) {
     console.error("Không thể đọc thông tin phiên đăng nhập", error);
     return null;
@@ -34,7 +53,12 @@ export function saveStoredSessionUser(user: SessionUser | null) {
     return;
   }
 
-  window.localStorage.setItem("auth_user", JSON.stringify(user));
+  const normalizedUser: SessionUser = {
+    ...user,
+    role: normalizeUserRole(user.role, user.username),
+  };
+
+  window.localStorage.setItem("auth_user", JSON.stringify(normalizedUser));
 }
 
 export function clearStoredSession() {

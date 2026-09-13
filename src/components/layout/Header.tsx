@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import api from "@/lib/axios";
-import { clearStoredSession, getStoredSessionUser, saveStoredSessionUser } from "@/lib/session";
+import { clearStoredSession, getStoredSessionUser, normalizeUserRole, saveStoredSessionUser } from "@/lib/session";
 
 type HeaderProps = {
   title: string;
@@ -69,7 +69,8 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
 
   const displayName = user?.full_name?.trim() || user?.username?.trim() || "User";
   const initials = displayName.charAt(0).toUpperCase();
-  const roleLabel = user?.role === "admin" ? "Quản trị viên" : "Người dùng";
+  const effectiveRole = normalizeUserRole(user?.role, user?.username);
+  const roleLabel = effectiveRole === "admin" ? "Quản trị viên" : "Người dùng";
 
   const handleLogout = () => {
     clearStoredSession();
