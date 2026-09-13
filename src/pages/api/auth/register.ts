@@ -63,10 +63,15 @@ export default async function handler(
     return res.status(500).json({ message: "Supabase chưa được cấu hình" });
   }
 
+  const duplicateChecks = [`username.eq.${username}`];
+  if (email) {
+    duplicateChecks.push(`email.eq.${email}`);
+  }
+
   const { data: existingUsers, error: existingError } = await supabaseAdmin
     .from("users")
     .select("id")
-    .or(`username.eq.${username},email.eq.${email ?? ""}`);
+    .or(duplicateChecks.join(","));
 
   if (existingError) {
     return res.status(500).json({ message: existingError.message || "Không thể kiểm tra người dùng" });
