@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAdmin } from "@/lib/auth";
+import { normalizeComputerRecord } from "@/lib/computers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -36,14 +37,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(404).json({ message: "Không tìm thấy máy tính để xóa" });
   }
 
-  const { error } = await supabaseAdmin.from("computers").delete().eq("id", id);
+  const { data: deletedComputer, error } = await supabaseAdmin
+    .from("computers")
+    .delete()
+    .eq("id", id)
+    .select("id, name, room, specs, status, created_at")
+    .single();
 
   if (error) {
     return res.status(500).json({ message: error.message || "Xóa máy tính thất bại" });
   }
 
+  const normalizedComputer = normalizeComputerRecord(deletedComputer);
+
   return res.status(200).json({
     message: "Xóa máy tính thành công",
     deletedId: id,
+    computer: normalizedComputer,
   });
 }

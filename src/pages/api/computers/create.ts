@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAdmin } from "@/lib/auth";
+import { normalizeComputerRecord } from "@/lib/computers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -62,8 +63,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ message: error?.message || "Thêm máy tính thất bại" });
   }
 
+  const normalizedComputer = normalizeComputerRecord(created);
+
   return res.status(201).json({
     message: "Thêm máy tính thành công",
-    computer: created,
+    computer: normalizedComputer,
   });
 }

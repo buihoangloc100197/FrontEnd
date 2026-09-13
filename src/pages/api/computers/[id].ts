@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAdmin } from "@/lib/auth";
+import { normalizeComputerRecord } from "@/lib/computers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -25,7 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: "Không tìm thấy máy tính" });
     }
 
-    return res.status(200).json({ computer });
+    const normalizedComputer = normalizeComputerRecord(computer);
+    return res.status(200).json({ computer: normalizedComputer });
   }
 
   if (req.method !== "PUT" && req.method !== "PATCH") {
@@ -77,8 +79,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ message: error?.message || "Cập nhật máy tính thất bại" });
   }
 
+  const normalizedComputer = normalizeComputerRecord(updated);
+
   return res.status(200).json({
     message: "Cập nhật máy tính thành công",
-    computer: updated,
+    computer: normalizedComputer,
   });
 }
