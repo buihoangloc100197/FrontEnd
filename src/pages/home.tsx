@@ -367,7 +367,7 @@ export default function Home() {
               </div>
             </section>
 
-            <section className="grid gap-5 xl:grid-cols-[1.6fr_0.95fr]">
+            <section className="grid gap-5 xl:grid-cols-[1.45fr_1fr]">
               <div className="rounded-[28px] border border-[#dfe5ee] bg-[#f2f3f6] p-4 md:p-5 shadow-[0_8px_20px_rgba(15,23,42,0.02)]">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
@@ -429,48 +429,22 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-[#dfe5ee] bg-[#f2f3f6] p-4 md:p-5 shadow-[0_8px_20px_rgba(15,23,42,0.02)]">
+              <div className="rounded-[28px] border border-[#dfe5ee] bg-[#f5f6f9] p-4 md:p-5 shadow-[0_8px_20px_rgba(15,23,42,0.02)]">
                 <div className="mb-4">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#7d8595]">REQUEST</p>
-                  <h3 className="mt-2 text-[20px] font-bold text-[#1c2431]">Đăng ký mượn máy</h3>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#7d8595]">THỐNG KÊ</p>
+                  <h3 className="mt-2 text-[20px] font-bold text-[#1c2431]">Tổng quan nhanh</h3>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-2 block text-[12px] font-medium text-[#475569]">Chọn máy</label>
-                    <select
-                      value={selectedComputerId}
-                      onChange={(event) => setSelectedComputerId(event.target.value)}
-                      className="w-full rounded-xl border border-[#dfe5ee] bg-white px-4 py-3 text-[15px] text-[#455164] outline-none transition-colors duration-200 focus:border-[#7c9cff] hover:border-[#c4d1ff]"
+                <div className="space-y-3">
+                  {stats.map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between rounded-[16px] border border-[#dfe5ee] bg-white px-3 py-3"
                     >
-                      <option value="">-- Chọn máy --</option>
-                      {computers.map((computer) => (
-                        <option key={computer.id} value={computer.id}>
-                          {computer.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-[12px] font-medium text-[#475569]">Lý do mượn</label>
-                    <textarea
-                      rows={5}
-                      value={reason}
-                      onChange={(event) => setReason(event.target.value)}
-                      className="w-full resize-none rounded-xl border border-[#dfe5ee] bg-white px-4 py-3 text-[15px] text-[#455164] outline-none placeholder:text-[#8a93a4] transition-colors duration-200 focus:border-[#7c9cff] hover:border-[#c4d1ff]"
-                      placeholder="Ví dụ: cần làm bài tập, demo, học thực hành..."
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleCreateRequest}
-                    disabled={!selectedComputerId}
-                    className="w-full rounded-2xl bg-gradient-to-r from-[#4f5ef7] to-[#7a5cf0] px-5 py-4 text-[18px] font-semibold text-white shadow-[0_10px_22px_rgba(83,96,255,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(83,96,255,0.32)] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Gửi yêu cầu mượn
-                  </button>
+                      <span className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#697586]">{item.label}</span>
+                      <span className={`text-[26px] font-bold leading-none ${item.accent}`}>{item.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
