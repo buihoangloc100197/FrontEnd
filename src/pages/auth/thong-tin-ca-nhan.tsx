@@ -20,7 +20,6 @@ export default function PersonalInfoPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [avatarMode, setAvatarMode] = useState<"upload" | "link">("link");
   const [message, setMessage] = useState("");
   const [form, setForm] = useState<ProfileForm>({
     full_name: "",
@@ -72,9 +71,6 @@ export default function PersonalInfoPage() {
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = event.target;
-    if (name === "avatar_url") {
-      setAvatarMode("link");
-    }
     setForm((current) => ({ ...current, [name]: value }));
   };
 
@@ -113,7 +109,6 @@ export default function PersonalInfoPage() {
       }
 
       const publicUrl = `${getSupabaseUrl()}/storage/v1/object/public/avatars/${data?.path ?? fileName}`;
-      setAvatarMode("upload");
       setForm((current) => ({ ...current, avatar_url: publicUrl }));
       setMessage("Ảnh đại diện đã được tải lên Supabase thành công");
     } catch (error: any) {
@@ -256,74 +251,30 @@ export default function PersonalInfoPage() {
             </div>
 
             <div className="md:col-span-2">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <label className="block text-sm font-medium text-slate-300">Ảnh đại diện</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAvatarMode("upload");
-                      fileInputRef.current?.click();
-                    }}
-                    disabled={uploadingImage}
-                    className="inline-flex items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Tải ảnh lên Supabase"
-                    title="Tải ảnh từ máy lên Supabase"
-                  >
-                    {uploadingImage ? "Đang tải..." : "Tải ảnh lên"}
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-300">
-                  <button
-                    type="button"
-                    onClick={() => setAvatarMode("upload")}
-                    className={[
-                      "rounded-full border px-3 py-1.5 transition",
-                      avatarMode === "upload"
-                        ? "border-cyan-500 bg-cyan-500/15 text-cyan-300"
-                        : "border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-500/50",
-                    ].join(" ")}
-                  >
-                    Tải ảnh lên
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAvatarMode("link")}
-                    className={[
-                      "rounded-full border px-3 py-1.5 transition",
-                      avatarMode === "link"
-                        ? "border-cyan-500 bg-cyan-500/15 text-cyan-300"
-                        : "border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-500/50",
-                    ].join(" ")}
-                  >
-                    Dùng link
-                  </button>
-                </div>
+              <div className="mb-2 flex items-center gap-2">
+                <label className="block text-sm font-medium text-slate-300">Ảnh đại diện</label>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="inline-flex items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Chọn ảnh từ máy"
+                  title="Chọn ảnh từ máy"
+                >
+                  {uploadingImage ? "Đang tải..." : "Chọn ảnh"}
+                </button>
               </div>
 
-              <div className="relative">
-                <input
-                  type="url"
-                  name="avatar_url"
-                  value={form.avatar_url}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 pr-12 text-white outline-none focus:border-cyan-500"
-                  placeholder="https://example.com/avatar.png"
-                />
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleUploadAvatar}
-                />
-              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleUploadAvatar}
+              />
 
               <p className="mt-2 text-xs text-slate-400">
-                {avatarMode === "upload"
-                  ? "Hình ảnh đang được lưu bằng upload lên Supabase Storage."
-                  : "Bạn đang lưu link ảnh trực tiếp vào dữ liệu người dùng."}
+                Ảnh sẽ được tải lên Supabase Storage và lưu link vào hồ sơ người dùng.
               </p>
             </div>
 
