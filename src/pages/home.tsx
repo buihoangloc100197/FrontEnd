@@ -570,18 +570,77 @@ export default function Home() {
         ) : (
           <>
             <section className="rounded-[28px] border border-[#dfe5ee] bg-[#f3f4f7] p-5 md:p-7 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-[#7d8595]">USER PORTAL</p>
-                <h1 className="mt-3 text-[34px] font-bold tracking-[-0.04em] text-[#1c2431]">
-                  Đăng ký mượn máy
-                </h1>
-                <p className="mt-2 text-[14px] text-[#646f7d]">
-                  Bạn gửi yêu cầu, admin sẽ kiểm tra và giải quyết cho bạn.
-                </p>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-[#7d8595]">USER PORTAL</p>
+                  <h1 className="mt-3 text-[34px] font-bold tracking-[-0.04em] text-[#1c2431]">
+                    Quản lý máy tính - Chế độ xem
+                  </h1>
+                  <p className="mt-2 text-[14px] text-[#646f7d]">
+                    Bạn chỉ được xem trạng thái và số lượng máy tính. Không có quyền thêm, sửa hoặc xóa máy.
+                  </p>
+                </div>
+                <span className="inline-flex w-fit rounded-full border border-[#dfe5ee] bg-white px-3 py-1.5 text-[12px] font-medium text-[#475569]">
+                  Chỉ xem
+                </span>
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-4">
+                {stats.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-[18px] border border-[#dfe5ee] bg-[#f7f8fa] px-4 py-4 text-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_14px_rgba(15,23,42,0.05)]"
+                  >
+                    <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[#6c7587]">
+                      {item.label}
+                    </p>
+                    <p className={`mt-4 text-[42px] font-bold leading-none ${item.accent}`}>{item.value}</p>
+                  </div>
+                ))}
               </div>
             </section>
 
             <section className="grid gap-5 xl:grid-cols-[1.1fr_1.4fr]">
+              <div className="rounded-[28px] border border-[#dfe5ee] bg-[#f3f4f7] p-4 md:p-5 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
+                <div className="mb-4">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#7d8595]">MACHINES</p>
+                  <h3 className="mt-2 text-[20px] font-bold text-[#1c2431]">Danh sách máy</h3>
+                </div>
+
+                <div className="space-y-4">
+                  {loading ? (
+                    <div className="rounded-[18px] border border-[#dfe5ee] bg-white px-4 py-6 text-sm text-[#5e697b]">
+                      Đang tải thông tin máy tính...
+                    </div>
+                  ) : computers.length === 0 ? (
+                    <div className="rounded-[18px] border border-[#dfe5ee] bg-white px-4 py-6 text-sm text-[#5e697b]">
+                      Chưa có máy nào trong hệ thống.
+                    </div>
+                  ) : (
+                    computers.map((machine) => {
+                      const style = statusStyles[machine.status] ?? statusStyles.available;
+                      return (
+                        <div
+                          key={machine.id}
+                          className="rounded-[18px] border border-[#dfe5ee] bg-white p-4 shadow-[0_6px_14px_rgba(15,23,42,0.02)]"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-[18px] font-bold text-[#1c2431]">{machine.name}</div>
+                              <div className="mt-1 text-[13px] text-[#7a8292]">{machine.room}</div>
+                            </div>
+                            <span className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-medium ${style.className}`}>
+                              {style.label}
+                            </span>
+                          </div>
+                          {machine.specs ? <p className="mt-3 text-[14px] text-[#455164]">{machine.specs}</p> : null}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
               <div className="rounded-[28px] border border-[#dfe5ee] bg-[#f3f4f7] p-4 md:p-5 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
                 <div className="mb-4">
                   <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#7d8595]">REQUEST</p>
@@ -626,42 +685,42 @@ export default function Home() {
                   </button>
                 </div>
               </div>
+            </section>
 
-              <div className="rounded-[28px] border border-[#dfe5ee] bg-[#f3f4f7] p-4 md:p-5 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-[#7d8595]">MY REQUESTS</p>
-                    <h3 className="mt-2 text-[20px] font-bold text-[#1c2431]">Yêu cầu của tôi</h3>
+            <section className="rounded-[28px] border border-[#dfe5ee] bg-[#f3f4f7] p-4 md:p-5 shadow-[0_8px_20px_rgba(15,23,42,0.03)]">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.26em] text-[#7d8595]">MY REQUESTS</p>
+                  <h3 className="mt-2 text-[20px] font-bold text-[#1c2431]">Yêu cầu của tôi</h3>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {myRequests.length === 0 ? (
+                  <div className="rounded-[18px] border border-[#dfe5ee] bg-white px-4 py-6 text-sm text-[#5e697b]">
+                    Bạn chưa có yêu cầu mượn máy nào.
                   </div>
-                </div>
+                ) : (
+                  myRequests.map((request) => {
+                    const machine = computers.find((computer) => computer.id === request.computer_id);
+                    const style = statusStyles[request.status] ?? statusStyles.pending;
 
-                <div className="space-y-3">
-                  {myRequests.length === 0 ? (
-                    <div className="rounded-[18px] border border-[#dfe5ee] bg-white px-4 py-6 text-sm text-[#5e697b]">
-                      Bạn chưa có yêu cầu mượn máy nào.
-                    </div>
-                  ) : (
-                    myRequests.map((request) => {
-                      const machine = computers.find((computer) => computer.id === request.computer_id);
-                      const style = statusStyles[request.status] ?? statusStyles.pending;
-
-                      return (
-                        <div key={request.id} className="rounded-[18px] border border-[#dfe5ee] bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_18px_rgba(15,23,42,0.04)]">
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <div className="text-[18px] font-bold text-[#1c2431]">{machine?.name ?? "Máy"}</div>
-                              <div className="mt-1 text-[13px] text-[#7a8292]">{request.requested_at ? new Date(request.requested_at).toLocaleString("vi-VN") : "-"}</div>
-                            </div>
-                            <span className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-medium ${style.className}`}>
-                              {style.label}
-                            </span>
+                    return (
+                      <div key={request.id} className="rounded-[18px] border border-[#dfe5ee] bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_18px_rgba(15,23,42,0.04)]">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="text-[18px] font-bold text-[#1c2431]">{machine?.name ?? "Máy"}</div>
+                            <div className="mt-1 text-[13px] text-[#7a8292]">{request.requested_at ? new Date(request.requested_at).toLocaleString("vi-VN") : "-"}</div>
                           </div>
-                          <p className="mt-3 text-[14px] text-[#455164]">{request.reason || "Không có lý do"}</p>
+                          <span className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-medium ${style.className}`}>
+                            {style.label}
+                          </span>
                         </div>
-                      );
-                    })
-                  )}
-                </div>
+                        <p className="mt-3 text-[14px] text-[#455164]">{request.reason || "Không có lý do"}</p>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </section>
           </>
