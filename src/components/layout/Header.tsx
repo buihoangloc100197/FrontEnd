@@ -24,10 +24,14 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const persistedUser = getStoredSessionUser();
-    if (persistedUser) {
-      setUser(persistedUser);
-    }
+    const syncUserFromSession = () => {
+      const persistedUser = getStoredSessionUser();
+      if (persistedUser) {
+        setUser(persistedUser);
+      }
+    };
+
+    syncUserFromSession();
 
     const token = getStoredSessionToken();
     if (!token) {
@@ -49,11 +53,26 @@ export function Header({ title, collapsed, onToggleSidebar }: HeaderProps) {
         saveStoredSessionUser(nextUser);
       } catch (error) {
         console.error("Không thể tải thông tin người dùng", error);
+        const persistedUser = getStoredSessionUser();
         setUser(persistedUser ?? null);
       }
     };
 
     fetchUser();
+
+    const handleUserUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<UserSummary | null>;
+      const nextUser = customEvent.detail ?? getStoredSessionUser();
+      if (nextUser) {
+        setUser(nextUser);
+        saveStoredSessionUser(nextUser);
+      }
+    };
+
+    window.addEventListener("session:user-updated", handleUserUpdated);
+    return () => {
+      window.removeEventListener("session:user-updated", handleUserUpdated);
+    };
   }, [router.pathname]);
 
   useEffect(() => {

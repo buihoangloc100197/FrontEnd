@@ -139,11 +139,14 @@ export default function PersonalInfoPage() {
       );
 
       const storedUser = getStoredSessionUser();
-      saveStoredSessionUser({
+      const updatedUser = {
         ...storedUser,
         ...form,
         avatar_url: form.avatar_url || storedUser?.avatar_url || null,
-      });
+      };
+
+      saveStoredSessionUser(updatedUser);
+      window.dispatchEvent(new CustomEvent("session:user-updated", { detail: updatedUser }));
 
       setMessage(response.data.message);
       setTimeout(() => router.push("/"), 800);
