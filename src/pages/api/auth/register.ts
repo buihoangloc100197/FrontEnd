@@ -79,7 +79,7 @@ export default async function handler(
 
   if ((existingUsers ?? []).length > 0) {
     return res.status(409).json({
-      message: "Tên đăng nhập hoặc email đã tồn tại",
+      message: "Tài khoản đã tồn tại, vui lòng tạo tài khoản khác",
     });
   }
 

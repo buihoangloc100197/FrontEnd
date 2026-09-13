@@ -33,7 +33,8 @@ export default function RegisterPage() {
       setMessage(response.data.message);
       setTimeout(() => router.push("/auth/login"), 800);
     } catch (err: any) {
-      setMessage(err?.response?.data?.message ?? "Đăng ký thất bại");
+      const responseMessage = err?.response?.data?.message;
+      setMessage(responseMessage || "Tài khoản đã tồn tại, vui lòng tạo tài khoản khác");
     } finally {
       setLoading(false);
     }
