@@ -257,7 +257,22 @@ export default function PersonalInfoPage() {
 
             <div className="md:col-span-2">
               <div className="mb-2 flex items-center justify-between gap-3">
-                <label className="block text-sm font-medium text-slate-300">Ảnh đại diện</label>
+                <div className="flex items-center gap-2">
+                  <label className="block text-sm font-medium text-slate-300">Ảnh đại diện</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAvatarMode("upload");
+                      fileInputRef.current?.click();
+                    }}
+                    disabled={uploadingImage}
+                    className="inline-flex items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label="Tải ảnh lên Supabase"
+                    title="Tải ảnh từ máy lên Supabase"
+                  >
+                    {uploadingImage ? "Đang tải..." : "Tải ảnh lên"}
+                  </button>
+                </div>
                 <div className="flex items-center gap-2 text-xs text-slate-300">
                   <button
                     type="button"
@@ -295,20 +310,6 @@ export default function PersonalInfoPage() {
                   className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 pr-12 text-white outline-none focus:border-cyan-500"
                   placeholder="https://example.com/avatar.png"
                 />
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAvatarMode("upload");
-                    fileInputRef.current?.click();
-                  }}
-                  disabled={uploadingImage}
-                  className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/10 text-lg text-cyan-300 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="Tải ảnh lên Supabase"
-                  title="Tải ảnh từ máy lên Supabase"
-                >
-                  {uploadingImage ? "…" : "📷"}
-                </button>
 
                 <input
                   ref={fileInputRef}
